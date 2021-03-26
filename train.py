@@ -20,14 +20,16 @@ absl.flags.DEFINE_integer("log_interval",100,"Log interval between prints during
 absl.flags.mark_flag_as_required("modality")
 FLAGS = absl.flags.FLAGS
 
-# Fix seed
-torch.backends.cudnn.deterministic = True
-torch.backends.cudnn.benchmark = False # set to false for reproducibility, True to boost performance
-seed = 0
-np.random.seed(seed)
-torch.manual_seed(seed)
-torch.cuda.manual_seed(seed)
-random.seed(seed)
+def set_seed(seed):
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False # set to false for reproducibility, True to boost performance
+    torch.manual_seed(seed)
+    np.random.seed(seed)
+    torch.cuda.manual_seed(seed)
+    random.seed(seed)
+    random_state = random.getstate()
+    os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
+    return random_state
 
 def train_step(model, inputs, targets, optimizer, loss_criterion):    
     optimizer.zero_grad() # zeroing gradients
@@ -135,11 +137,7 @@ def run_experiment(config,modality):
        
     for run in range(initial_run,config['runs']):
         run_time = time.time()
-        seed = run
-        np.random.seed(seed)
-        torch.manual_seed(seed)
-        torch.cuda.manual_seed(seed)
-        random.seed(seed)
+        set_seed(run)
         
         model = get_model(config['model'],num_classes,model_type=modality)
         model = model.to(device)
