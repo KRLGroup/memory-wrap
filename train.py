@@ -8,7 +8,7 @@ import absl.app
 import os
 import yaml
 import datasets
-from aux import get_model,eval_memory,get_loaders,eval_std
+from aux import get_model,eval_memory,get_loaders,eval_std, eval_memory_vote
 import time
 import pickle
 
@@ -101,11 +101,10 @@ def run_experiment(config,modality):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Device:{}".format(device))
 
-
-    # get dataset
+    # get dataset info
     dataset_name = config['dataset_name']
-    train_loader, val_loader, test_loader, mem_loader = get_loaders(config)
     num_classes = config[dataset_name]['num_classes']
+
 
     # training parameters
     loss_criterion = torch.nn.CrossEntropyLoss()
@@ -133,27 +132,31 @@ def run_experiment(config,modality):
         initial_run = info['run_num']
         run_acc = info['accuracies']
 
-
+    def count_parameters(model):
+        return sum(p.numel() for p in model.parameters() if p.requires_grad)
        
     for run in range(initial_run,config['runs']):
         run_time = time.time()
         set_seed(run)
-        
+        torch.cuda.init()
         model = get_model(config['model'],num_classes,model_type=modality)
         model = model.to(device)
-
         # training parameters
         optimizer = torch.optim.SGD(model.parameters(),**dict_optim)
         scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer,  milestones=opt_milestones)
         
+        # get dataset
+        train_loader, val_loader, test_loader, mem_loader = get_loaders(config,run)
+
          # training process
         if modality == 'memory' or modality == 'encoder_memory':
             model = train_memory_model(model,[train_loader,val_loader,mem_loader],optimizer,scheduler,loss_criterion,config[dataset_name]['num_epochs'],device=device)            
             cum_acc =  []
 
             # perform 10 times the validation to stabilize results (due to random selection of memory samples)
+            #best_acc, best_loss = eval_memory_vote(model,test_loader,mem_loader,loss_criterion,device)
             for _ in range(10):
-                best_acc, best_loss = eval_memory(model,test_loader,mem_loader,loss_criterion,device)
+                best_acc, best_loss = eval_memory_vote(model,test_loader, mem_loader,loss_criterion,device)
                 cum_acc.append(best_acc)
             best_acc = np.mean(cum_acc)
 

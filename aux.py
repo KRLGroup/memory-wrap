@@ -6,7 +6,7 @@ from architectures.mobilenet import MobileNetV2
 from architectures.efficientnet import EfficientNetB0
 from architectures.memory import MemoryWrap,EncoderMemoryWrap
 from architectures.memory import Identity
-
+import statistics
 def get_model(model_name, num_classes, model_type='memory'):
     if model_name == 'efficientnet':
         model = EfficientNetB0()
@@ -45,7 +45,7 @@ def get_model(model_name, num_classes, model_type='memory'):
     
     return model
 
-def get_loaders(config):
+def get_loaders(config,seed=42):
     # unpack config
     dataset = config['dataset_name']
     data_dir = config['dataset_dir']
@@ -57,7 +57,7 @@ def get_loaders(config):
 
     #load data
     load_dataset = getattr(datasets, 'get_'+dataset)
-    loaders = load_dataset(data_dir,batch_size_train=batch_size_train, batch_size_test=batch_size_test,batch_size_memory=mem_examples,size_train=train_examples)
+    loaders = load_dataset(data_dir,batch_size_train=batch_size_train, batch_size_test=batch_size_test,batch_size_memory=mem_examples,size_train=train_examples,seed=seed)
     return loaders
 
 def get_datasets(config):
@@ -83,6 +83,34 @@ def eval_memory(model,loader,mem_loader,loss_criterion,device):
             pred = output.data.max(1, keepdim=True)[1]
             
             correct += pred.eq(target.data.view_as(pred)).sum().item()
+            test_loss += loss.item()
+            
+        
+        test_accuracy = 100.*(torch.true_divide(correct,len(loader.dataset)))
+    return test_accuracy,  torch.true_divide(test_loss,len(loader))
+
+
+def eval_memory_vote(model,loader,mem_loader,loss_criterion,device):
+    model.eval()
+    test_loss = 0.0
+    correct = 0
+    with torch.no_grad():
+        for _, (data, target) in enumerate(loader):
+            data = data.to(device)
+            target = target.to(device)
+            outputs = []
+            for iteration in range(10):
+                memory, y = next(iter(mem_loader))
+                memory = memory.to(device)
+
+                output  = model(data,memory)
+                pred = output.data.max(1, keepdim=True)[1]
+                outputs.append(pred)
+            prediction = statistics.mode(outputs)
+
+            loss = loss_criterion(output, target) 
+            
+            correct += prediction.eq(target.data.view_as(prediction)).sum().item()
             test_loss += loss.item()
             
         

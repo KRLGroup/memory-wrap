@@ -1,3 +1,5 @@
 __pycache__/
 config/
 models/
+*.cpython*
+core

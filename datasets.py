@@ -34,16 +34,16 @@ def undo_normalization_CIFAR10(input):
 
 
 
-def split_dataset(dataset,train_size,val_size):
+def split_dataset(dataset,train_size,val_size,seed):
     first_split = len(dataset) - val_size
-    data_rest, val_dataset = torch.utils.data.random_split(dataset,[first_split,val_size],generator=torch.Generator().manual_seed(42))
+    data_rest, val_dataset = torch.utils.data.random_split(dataset,[first_split,val_size],generator=torch.Generator().manual_seed(seed))
     size_train = min(len(data_rest),train_size)
-    train_dataset, _ = torch.utils.data.random_split(data_rest,[size_train,len(data_rest)-size_train], generator=torch.Generator().manual_seed(42))
+    train_dataset, _ = torch.utils.data.random_split(data_rest,[size_train,len(data_rest)-size_train], generator=torch.Generator().manual_seed(seed))
     return train_dataset, val_dataset
 
 
 
-def get_SVHN(data_dir, batch_size_train, batch_size_test,batch_size_memory,size_train=100000):
+def get_SVHN(data_dir, batch_size_train, batch_size_test,batch_size_memory,size_train=100000,seed=42):
 
     normalize = torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                  std=[0.229, 0.224, 0.225])
@@ -53,9 +53,9 @@ def get_SVHN(data_dir, batch_size_train, batch_size_test,batch_size_memory,size_
             normalize,
     ])
     
-    train_data = torchvision.datasets.SVHN(data_dir, split='train', download=True, transform=transforms)
-    test_data =  torchvision.datasets.SVHN(data_dir, split='test', download=True, transform=transforms)
-    train_dataset, val_dataset = split_dataset(train_data,size_train,6000)
+    train_data = torchvision.datasets.SVHN(data_dir, split='train', download=False, transform=transforms)
+    test_data =  torchvision.datasets.SVHN(data_dir, split='test', download=False, transform=transforms)
+    train_dataset, val_dataset = split_dataset(train_data,size_train,6000,seed)
 
 
     train_loader = torch.utils.data.DataLoader( train_dataset, batch_size=batch_size_train,pin_memory=True, shuffle=True, drop_last=True)
@@ -70,7 +70,7 @@ def get_SVHN(data_dir, batch_size_train, batch_size_test,batch_size_memory,size_
 
 
 
-def get_CIFAR10(data_dir, batch_size_train, batch_size_test,batch_size_memory,size_train=100000):
+def get_CIFAR10(data_dir, batch_size_train, batch_size_test,batch_size_memory,size_train=100000,seed=42):
     normalize = torchvision.transforms.Normalize(mean=[0.4914, 0.4822, 0.4465],
                                  std=[0.2023, 0.1994, 0.2010])
     transforms_train = torchvision.transforms.Compose([
@@ -83,11 +83,11 @@ def get_CIFAR10(data_dir, batch_size_train, batch_size_test,batch_size_memory,si
                normalize
     ])
 
-    train_data = torchvision.datasets.CIFAR10(data_dir, train=True, download=True, transform=transforms_train)
-    test_data = torchvision.datasets.CIFAR10(data_dir, train=False, download=True, transform=transforms_test)
+    train_data = torchvision.datasets.CIFAR10(data_dir, train=True, download=False, transform=transforms_train)
+    test_data = torchvision.datasets.CIFAR10(data_dir, train=False, download=False, transform=transforms_test)
     
 
-    train_dataset, val_dataset = split_dataset(train_data,size_train,6000)
+    train_dataset, val_dataset = split_dataset(train_data,size_train,6000,seed)
 
 
     train_loader = torch.utils.data.DataLoader( train_dataset,num_workers=4, batch_size=batch_size_train,pin_memory=False, shuffle=True, drop_last=True)
