@@ -12,7 +12,6 @@ from aux import get_model,eval_memory,get_loaders,eval_std, eval_memory_vote
 import time
 import pickle
 
-
 # user flags
 absl.flags.DEFINE_string("modality", None, "std, memory or encoder_memory")
 absl.flags.DEFINE_bool("continue_train", False, "std, memory or mlp")
