@@ -1,8 +1,8 @@
 # 
 
-model: mobilenet # mobilenet, efficientnet or resnet18
-save: True
-train_examples: 5000 # tested: [1000,2000,5000,100000]. The last one is the full dataset configuration
+model: efficientnet # mobilenet, efficientnet or resnet18
+save: False
+train_examples: 1000 # tested: [1000,2000,5000,100000]. The last one is the full dataset configuration
 runs: 30
 batch_size_train: 128
 batch_size_test: 500
@@ -17,7 +17,7 @@ optimizer:
 
 # general config
 dataset_dir: ../datasets
-dataset_name: CIFAR10 # SVHN or CIFAR10
+dataset_name: SVHN # SVHN or CIFAR10
 
 # dataset config
 SVHN:
@@ -30,4 +30,9 @@ CIFAR10:
   num_epochs: 300
   opt_milestones : [150, 225]
   mem_examples:  100
+CIFAR100:
+  num_classes: 100
+  num_epochs: 300
+  opt_milestones : [150, 225]
+  mem_examples:  1000
 

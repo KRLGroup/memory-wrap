@@ -154,9 +154,9 @@ def run_experiment(config,modality):
             cum_acc =  []
 
             # perform 10 times the validation to stabilize results (due to random selection of memory samples)
-            #best_acc, best_loss = eval_memory_vote(model,test_loader,mem_loader,loss_criterion,device)
+            # best_acc, best_loss = eval_memory_vote(model,test_loader,mem_loader,loss_criterion,device)
             for _ in range(10):
-                best_acc, best_loss = eval_memory_vote(model,test_loader, mem_loader,loss_criterion,device)
+                best_acc, best_loss = eval_memory(model,test_loader, mem_loader,loss_criterion,device)
                 cum_acc.append(best_acc)
             best_acc = np.mean(cum_acc)
 

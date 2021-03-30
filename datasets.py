@@ -100,3 +100,32 @@ def get_CIFAR10(data_dir, batch_size_train, batch_size_test,batch_size_memory,si
     
     return train_loader, val_loader, test_loader, mem_loader
 
+def get_CIFAR100(data_dir, batch_size_train, batch_size_test,batch_size_memory,size_train=100000,seed=42):
+    normalize = torchvision.transforms.Normalize(mean=[0.4914, 0.4822, 0.4465],
+                                 std=[0.2023, 0.1994, 0.2010])
+    transforms_train = torchvision.transforms.Compose([
+                torchvision.transforms.RandomHorizontalFlip(),
+               torchvision.transforms.ToTensor(),
+                normalize
+    ])
+    transforms_test = torchvision.transforms.Compose([
+               torchvision.transforms.ToTensor(),
+               normalize
+    ])
+
+    train_data = torchvision.datasets.CIFAR100(data_dir, train=True, download=False, transform=transforms_train)
+    test_data = torchvision.datasets.CIFAR100(data_dir, train=False, download=False, transform=transforms_test)
+    
+
+    train_dataset, val_dataset = split_dataset(train_data,size_train,6000,seed)
+
+
+    train_loader = torch.utils.data.DataLoader( train_dataset,num_workers=4, batch_size=batch_size_train,pin_memory=False, shuffle=True, drop_last=True)
+
+    val_loader = torch.utils.data.DataLoader( val_dataset, batch_size=batch_size_test,pin_memory=False)
+
+    test_loader = torch.utils.data.DataLoader(test_data, batch_size=batch_size_test,pin_memory=False)
+
+    mem_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size_memory,pin_memory=False, shuffle=True, drop_last=True)
+    
+    return train_loader, val_loader, test_loader, mem_loader
