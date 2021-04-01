@@ -7,29 +7,36 @@ from architectures.efficientnet import EfficientNetB0
 from architectures.memory import MemoryWrap,EncoderMemoryWrap
 from architectures.memory import Identity
 import statistics
+from architectures.memory_efficientnet import MemoryEfficientNetB0, EncoderMemoryEfficientNetB0
+from architectures.memory_mobilenet import MemoryMobileNetV2,EncoderMemoryMobileNetV2
+from architectures.memory_resnet import MemoryResNet18,EncoderMemoryResNet18
 def get_model(model_name, num_classes, model_type='memory'):
     if model_name == 'efficientnet':
-        model = EfficientNetB0()
+        if model_type=='memory':
+            model = MemoryEfficientNetB0()
+        elif model_type == 'encoder_memory':
+            model = EncoderMemoryEfficientNetB0()
+        else:
+            model = EfficientNetB0()
     elif model_name == 'resnet18':
-        model = resnet.ResNet18()
+        if model_type=='memory':
+            model = MemoryResNet18()
+        elif model_type == 'encoder_memory':
+            model = EncoderMemoryResNet18()
+        else:
+            model = resnet.ResNet18()
     elif model_name == 'mobilenet':
-        model = MobileNetV2()
+        if model_type=='memory':
+            model = MemoryMobileNetV2()
+        elif model_type == 'encoder_memory':
+            model = EncoderMemoryMobileNetV2()
+        else:
+            model = MobileNetV2()
     else:
         print("Error: input model name is not valid!")
         exit()
-    if model_type=='memory':
-        # replace last layer of a given architecture. It avoid to re-write all architectures separately
-        num_input_feat = model.linear.in_features
-        model.linear = Identity()
-        # add memory wrap to the model
-        model = MemoryWrap(model,num_input_feat,num_classes)
-    elif model_type=='encoder_memory':
-        # replace last layer of a given architecture. It avoid to re-write all architectures separately
-        num_input_feat = model.linear.in_features
-        model.linear = Identity()
-        # add memory wrap to the model
-        model = EncoderMemoryWrap(model,num_input_feat,num_classes)
-    
+
+   
     return model
 
 def get_loaders(config,seed=42):
