@@ -1,5 +1,6 @@
 __pycache__/
+architectures/__pycache__
 config/
 models/
-*.cpython*
+.pyc
 core

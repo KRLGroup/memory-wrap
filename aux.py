@@ -10,38 +10,25 @@ import statistics
 def get_model(model_name, num_classes, model_type='memory'):
     if model_name == 'efficientnet':
         model = EfficientNetB0()
-        num_input_feat = 320
     elif model_name == 'resnet18':
         model = resnet.ResNet18()
-        num_input_feat = 512
     elif model_name == 'mobilenet':
         model = MobileNetV2()
-        num_input_feat = 1280
     else:
         print("Error: input model name is not valid!")
         exit()
     if model_type=='memory':
         # replace last layer of a given architecture. It avoid to re-write all architectures separately
-        if model_name == 'resnet18':
-            model.fc = Identity()
-        else:
-            model.linear = Identity()
+        num_input_feat = model.linear.in_features
+        model.linear = Identity()
         # add memory wrap to the model
         model = MemoryWrap(model,num_input_feat,num_classes)
     elif model_type=='encoder_memory':
         # replace last layer of a given architecture. It avoid to re-write all architectures separately
-        if model_name == 'resnet18':
-            model.fc = Identity()
-        else:
-            model.linear = Identity()
+        num_input_feat = model.linear.in_features
+        model.linear = Identity()
         # add memory wrap to the model
         model = EncoderMemoryWrap(model,num_input_feat,num_classes)
-    else:
-        if model_name == 'resnet18':
-            model.fc = nn.Linear(num_input_feat,num_classes)
-        else:
-            model.linear = nn.Linear(num_input_feat,num_classes)
-
     
     return model
 
