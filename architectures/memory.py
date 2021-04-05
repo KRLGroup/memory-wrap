@@ -98,6 +98,8 @@ class EncoderMemoryWrap(nn.Module):
         # layers
         self.encoder = encoder
         self.fc = MLP(final_input_dim,final_input_dim*2,output_dim)
+
+
     def _vector_norms(self, v):
         """ Computes the vector norms
         Args:
@@ -143,6 +145,68 @@ class EncoderMemoryWrap(nn.Module):
             return output
 
 
+class TLMemoryWrap(nn.Module):
+
+    def __init__(self, encoder, encoder_output_dim, output_dim, freeze_encoder=True):
+        super(TLMemoryWrap, self).__init__()
+
+        self.in_features = encoder_output_dim
+        self.out_features = output_dim
+        self.out_memory_dim = encoder_output_dim
+        final_input_dim = encoder_output_dim
+        
+        # layers
+        self.encoder = encoder
+
+        if freeze_encoder:
+            for param in self.encoder.parameters():
+                param.requires_grad = False
+
+        self.fc = MLP(final_input_dim,final_input_dim*2,output_dim)
+
+    def _vector_norms(self, v):
+        """ Computes the vector norms
+        Args:
+            v: The vector from which there must be calculated the norms
+
+        Returns:
+             A tensor containing the norms of input vector v
+        """
+
+        squared_norms = torch.sum(v * v, dim=1, keepdim=True)
+        return torch.sqrt(squared_norms + _EPSILON)
+        
+    def forward(self, inputs, supportset, return_weights=False):
+        """Forward call of MemoryWrap.
+        Args:
+            input: A tensor of dimensions [b,dim] where dim is the dimension required by the encoder
+            supportset: Support set. A tensor of dimension [m,dim] where m is the number of examples in memory
+            parsed_memory: a flag to indicate if the support set is already parsed by the encoder
+        Returns:
+            A tuple `(output, content-weight)` where `output`
+            is the output tensor, `content_weights` is a tensor containing the
+            read weights for sample in memory. If return_weights is False, then
+            only `output` is returned.
+        """
+      
+
+        encoder_output =  self.encoder(inputs)
+        memory = self.encoder(supportset)
+
+        encoder_norm = encoder_output / self._vector_norms(encoder_output)
+        memory_norm = memory / self._vector_norms(memory)
+        sim = torch.mm(encoder_norm,memory_norm.transpose(0,1))
+        content_weights = sparsemax(sim,dim=1)
+        support_vector = torch.matmul(content_weights,memory)
+        output = self.fc(support_vector)
+
+        if return_weights:
+            return output, content_weights
+        else: 
+            return output
+
+
+
 class MemoryWrapLayer(nn.Module):
 
     def __init__(self, encoder_output_dim, output_dim):
@@ -168,7 +232,7 @@ class MemoryWrapLayer(nn.Module):
         squared_norms = torch.sum(v * v, dim=1, keepdim=True)
         return torch.sqrt(squared_norms + _EPSILON)
         
-    def forward(self, encoder_output, memory,parsed_memory=False, return_weights=False):
+    def forward(self, encoder_output, memory, return_weights=False):
         """Forward call of MemoryWrap.
         Args:
             input: A tensor of dimensions [b,dim] where dim is the dimension required by the encoder
@@ -217,7 +281,7 @@ class EncoderMemoryWrapLayer(nn.Module):
         squared_norms = torch.sum(v * v, dim=1, keepdim=True)
         return torch.sqrt(squared_norms + _EPSILON)
         
-    def forward(self, encoder_output, memory,parsed_memory=False, return_weights=False):
+    def forward(self, encoder_output, memory, return_weights=False):
         """Forward call of MemoryWrap.
         Args:
             input: A tensor of dimensions [b,dim] where dim is the dimension required by the encoder

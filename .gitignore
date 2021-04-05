@@ -1,6 +1,9 @@
 __pycache__/
-architectures/__pycache__
+architectures/__pycache__/
 config/
 models/
 .pyc
 core
+*transfer*.py
+*.pyc
+architectures/memory.py

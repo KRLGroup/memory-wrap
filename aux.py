@@ -4,8 +4,8 @@ import torch.nn as nn
 from architectures import resnet
 from architectures.mobilenet import MobileNetV2
 from architectures.efficientnet import EfficientNetB0
-from architectures.memory import MemoryWrap,EncoderMemoryWrap
-from architectures.memory import Identity
+# from architectures.memory import MemoryWrap,EncoderMemoryWrap
+# from architectures.memory import Identity
 import statistics
 from architectures.memory_efficientnet import MemoryEfficientNetB0, EncoderMemoryEfficientNetB0
 from architectures.memory_mobilenet import MemoryMobileNetV2,EncoderMemoryMobileNetV2
@@ -25,6 +25,7 @@ def get_model(model_name, num_classes, model_type='memory'):
             model = EncoderMemoryResNet18()
         else:
             model = resnet.ResNet18()
+
     elif model_name == 'mobilenet':
         if model_type=='memory':
             model = MemoryMobileNetV2()

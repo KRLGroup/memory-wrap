@@ -30,16 +30,16 @@ def set_seed(seed):
     os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
     return random_state
 
-def train_step(model, inputs, targets, optimizer, loss_criterion):    
-    optimizer.zero_grad() # zeroing gradients
-    if type(inputs) is tuple:
-        outputs  = model(*inputs) # get output
-    else:
-        outputs = model(inputs)
-    loss = loss_criterion(outputs, targets)  # compute loss
-    loss.backward() # compute gradients
-    optimizer.step() # update weights
-    return loss
+# def train_step(model, inputs, targets, optimizer, loss_criterion):    
+#     optimizer.zero_grad() # zeroing gradients
+#     if type(inputs) is tuple:
+#         outputs  = model(*inputs) # get output
+#     else:
+#         outputs = model(inputs)
+#     loss = loss_criterion(outputs, targets)  # compute loss
+#     loss.backward() # compute gradients
+#     optimizer.step() # update weights
+#     return loss
 
 def train_memory_model(model,loaders,optimizer,scheduler, loss_criterion, num_epochs,device):
         
@@ -48,8 +48,11 @@ def train_memory_model(model,loaders,optimizer,scheduler, loss_criterion, num_ep
     # training process 
     model.train()
 
+    scaler = torch.cuda.amp.GradScaler()
     for epoch in range(1, num_epochs + 1):
         for batch_idx, (data, y) in enumerate(train_loader):
+            
+            optimizer.zero_grad()
             # input
             data = data.to(device)
             y = y.to(device)
@@ -57,7 +60,14 @@ def train_memory_model(model,loaders,optimizer,scheduler, loss_criterion, num_ep
             memory_input = memory_input.to(device)
             
             # perform training step
-            train_step(model=model,inputs=(data,memory_input),targets=y,optimizer=optimizer,loss_criterion=loss_criterion)
+            with torch.cuda.amp.autocast():
+                outputs  = model(data,memory_input)
+                loss = loss_criterion(outputs, y)
+
+            scaler.scale(loss).backward()
+            scaler.step(optimizer)
+            scaler.update()
+            #train_step(model=model,inputs=(data,memory_input),targets=y,optimizer=optimizer,loss_criterion=loss_criterion)
 
             #log stuff
             if batch_idx % FLAGS.log_interval == 0:
@@ -75,15 +85,23 @@ def train_std_model(model,train_loader,optimizer,scheduler, loss_criterion, num_
         
     # training process
     model.train()  
+    scaler = torch.cuda.amp.GradScaler()
     for epoch in range(1, num_epochs + 1):      
-        for batch_idx, (data, y) in enumerate(train_loader):  
+        for batch_idx, (data, y) in enumerate(train_loader): 
+            optimizer.zero_grad() 
             # input
             data = data.to(device)
             y = y.to(device)
             
             # training step
-            train_step(model=model,inputs=data,targets=y,optimizer=optimizer,loss_criterion=loss_criterion)
+            #train_step(model=model,inputs=data,targets=y,optimizer=optimizer,loss_criterion=loss_criterion)
+            with torch.cuda.amp.autocast():
+                outputs  = model(data)
+                loss = loss_criterion(outputs, y)
 
+            scaler.scale(loss).backward()
+            scaler.step(optimizer)
+            scaler.update()
             # log stuff
             if batch_idx % FLAGS.log_interval == 0:
                 print('Train Epoch: {} [({:.0f}%({})]\t'.format(
