@@ -7,4 +7,3 @@ core
 *transfer*.py
 *.pyc
 architectures/memory.py
-major*
