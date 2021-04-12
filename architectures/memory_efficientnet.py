@@ -160,7 +160,7 @@ class MemoryEfficientNet(nn.Module):
         out_ss = self.forward_encoder(ss)
 
         # prediction
-        out_mw = self.mw(out,out_ss,return_weight)
+        out_mw = self.mw(out,out_ss,return_weights)
         return out_mw
 
 class EncoderMemoryEfficientNet(MemoryEfficientNet):
