@@ -6,4 +6,3 @@ models/
 core
 *transfer*.py
 *.pyc
-architectures/memory.py
