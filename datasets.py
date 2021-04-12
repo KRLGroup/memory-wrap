@@ -65,13 +65,13 @@ def get_SVHN(data_dir, batch_size_train, batch_size_test,batch_size_memory,size_
     train_dataset, val_dataset = split_dataset(train_data,size_train,6000,seed)
 
 
-    train_loader = torch.utils.data.DataLoader( train_dataset, batch_size=batch_size_train,num_workers=2,pin_memory=True, shuffle=True, drop_last=True,worker_init_fn=seed_worker)
+    train_loader = torch.utils.data.DataLoader( train_dataset, batch_size=batch_size_train,pin_memory=True, shuffle=True, drop_last=True,worker_init_fn=seed_worker)
 
-    val_loader = torch.utils.data.DataLoader( val_dataset, batch_size=batch_size_test,num_workers=2,pin_memory=True, shuffle=False,worker_init_fn=seed_worker)
+    val_loader = torch.utils.data.DataLoader( val_dataset, batch_size=batch_size_test,pin_memory=True, shuffle=False,worker_init_fn=seed_worker)
 
-    test_loader = torch.utils.data.DataLoader(test_data, batch_size=batch_size_test,num_workers=2,pin_memory=True, shuffle=False,worker_init_fn=seed_worker)
+    test_loader = torch.utils.data.DataLoader(test_data, batch_size=batch_size_test,pin_memory=True, shuffle=False,worker_init_fn=seed_worker)
 
-    mem_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size_memory,num_workers=2,pin_memory=True, shuffle=True, drop_last=True,worker_init_fn=seed_worker)
+    mem_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size_memory,pin_memory=True, shuffle=True, drop_last=True,worker_init_fn=seed_worker)
     
     return train_loader, val_loader, test_loader, mem_loader
 
@@ -97,13 +97,13 @@ def get_CIFAR10(data_dir, batch_size_train, batch_size_test,batch_size_memory,si
     train_dataset, val_dataset = split_dataset(train_data,size_train,6000,seed)
 
 
-    train_loader = torch.utils.data.DataLoader( train_dataset,num_workers=2, batch_size=batch_size_train,pin_memory=False, shuffle=True, drop_last=True,worker_init_fn=seed_worker)
+    train_loader = torch.utils.data.DataLoader( train_dataset, batch_size=batch_size_train,pin_memory=True, shuffle=True, drop_last=True,worker_init_fn=seed_worker)
 
-    val_loader = torch.utils.data.DataLoader( val_dataset, batch_size=batch_size_test,num_workers=2,pin_memory=False,worker_init_fn=seed_worker)
+    val_loader = torch.utils.data.DataLoader( val_dataset, batch_size=batch_size_test,pin_memory=True,worker_init_fn=seed_worker)
 
-    test_loader = torch.utils.data.DataLoader(test_data, batch_size=batch_size_test,num_workers=2,pin_memory=False,worker_init_fn=seed_worker)
+    test_loader = torch.utils.data.DataLoader(test_data, batch_size=batch_size_test,pin_memory=True,worker_init_fn=seed_worker)
 
-    mem_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size_memory,num_workers=2,pin_memory=False, shuffle=True, drop_last=True,worker_init_fn=seed_worker)
+    mem_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size_memory,pin_memory=True, shuffle=True, drop_last=True,worker_init_fn=seed_worker)
     
     return train_loader, val_loader, test_loader, mem_loader
 
@@ -127,12 +127,12 @@ def get_CIFAR100(data_dir, batch_size_train, batch_size_test,batch_size_memory,s
     train_dataset, val_dataset = split_dataset(train_data,size_train,6000,seed)
 
 
-    train_loader = torch.utils.data.DataLoader( train_dataset,num_workers=2, batch_size=batch_size_train,pin_memory=False, shuffle=True, drop_last=True,worker_init_fn=seed_worker)
+    train_loader = torch.utils.data.DataLoader( train_dataset, batch_size=batch_size_train,pin_memory=True, shuffle=True, drop_last=True,worker_init_fn=seed_worker)
 
-    val_loader = torch.utils.data.DataLoader( val_dataset, batch_size=batch_size_test,num_workers=2,pin_memory=False,worker_init_fn=seed_worker)
+    val_loader = torch.utils.data.DataLoader( val_dataset, batch_size=batch_size_test,pin_memory=True,worker_init_fn=seed_worker)
 
-    test_loader = torch.utils.data.DataLoader(test_data, batch_size=batch_size_test,num_workers=2,pin_memory=False,worker_init_fn=seed_worker)
+    test_loader = torch.utils.data.DataLoader(test_data, batch_size=batch_size_test,pin_memory=True,worker_init_fn=seed_worker)
 
-    mem_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size_memory,num_workers=2,pin_memory=False, shuffle=True, drop_last=True,worker_init_fn=seed_worker)
+    mem_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size_memory,pin_memory=True, shuffle=True, drop_last=True,worker_init_fn=seed_worker)
     
     return train_loader, val_loader, test_loader, mem_loader

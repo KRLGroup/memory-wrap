@@ -130,14 +130,14 @@ class MemoryResNet(nn.Module):
         #outputs = self.linear(H)
         return H
     
-    def forward(self, x, ss):
+    def forward(self, x, ss,return_weights=False):
 
         #input
         out = self.forward_encoder(x)
         out_ss = self.forward_encoder(ss)
 
         # prediction
-        out_mw = self.mw(out,out_ss)
+        out_mw = self.mw(out,out_ss,return_weights)
         return out_mw
 
 

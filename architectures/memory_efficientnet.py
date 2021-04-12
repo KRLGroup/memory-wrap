@@ -153,14 +153,14 @@ class MemoryEfficientNet(nn.Module):
         return out
         return out_mw
 
-    def forward(self, x, ss):
+    def forward(self, x, ss,return_weights=False):
 
         #input
         out = self.forward_encoder(x)
         out_ss = self.forward_encoder(ss)
 
         # prediction
-        out_mw = self.mw(out,out_ss)
+        out_mw = self.mw(out,out_ss,return_weight)
         return out_mw
 
 class EncoderMemoryEfficientNet(MemoryEfficientNet):

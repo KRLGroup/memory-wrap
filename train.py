@@ -167,19 +167,26 @@ def run_experiment(config,modality):
 
          # training process
         if modality == 'memory' or modality == 'encoder_memory':
-            model = train_memory_model(model,[train_loader,val_loader,mem_loader],optimizer,scheduler,loss_criterion,config[dataset_name]['num_epochs'],device=device)            
+            model = train_memory_model(model,[train_loader,val_loader,mem_loader],optimizer,scheduler,loss_criterion,config[dataset_name]['num_epochs'],device=device)  
+            train_time = time.time()
+
             cum_acc =  []
 
             # perform 10 times the validation to stabilize results (due to random selection of memory samples)
             # best_acc, best_loss = eval_memory_vote(model,test_loader,mem_loader,loss_criterion,device)
-            for _ in range(10):
+            init_eval_time = time.time()
+            for _ in range(5):
                 best_acc, best_loss = eval_memory(model,test_loader, mem_loader,loss_criterion,device)
                 cum_acc.append(best_acc)
             best_acc = np.mean(cum_acc)
+            end_eval_time = time.time()
 
         else:
             model = train_std_model(model,train_loader,optimizer,scheduler,loss_criterion,config[dataset_name]['num_epochs'],device)
+            train_time = time.time()
+            init_eval_time = time.time()
             best_acc, best_loss  = eval_std(model,test_loader,loss_criterion,device)
+            end_eval_time = time.time()
 
         # stats
         run_acc.append(best_acc)
@@ -198,7 +205,7 @@ def run_experiment(config,modality):
             pickle.dump( info, open( path_saving_model+"conf.p", "wb" ) )
 
         # log
-        print("Run:{} | Best Loss:{:.4f} | Accuracy {:.2f} | Last Loss: Accuracy:| Mean Accuracy:{:.2f} | Std Dev Accuracy:{:.2f}\t{:.2f}min".format(run+1,best_loss,best_acc, np.mean(run_acc), np.std(run_acc),(time.time()-run_time)/60))
+        print("Run:{} | Best Loss:{:.4f} | Accuracy {:.2f} | Last Loss: Accuracy:| Mean Accuracy:{:.2f} | Std Dev Accuracy:{:.2f}\tT:{:.2f}min\tE:{:.2f}".format(run+1,best_loss,best_acc, np.mean(run_acc), np.std(run_acc),(train_time -run_time)/60,(end_eval_time -init_eval_time)/60))
 
 
 
