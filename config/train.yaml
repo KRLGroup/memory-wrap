@@ -2,7 +2,7 @@
 
 model: efficientnet # mobilenet, efficientnet or resnet18
 save: False
-train_examples: 5000 # tested: [1000,2000,5000,100000]. The last one is the full dataset configuration
+train_examples: 1000 # tested: [1000,2000,5000,100000]. The last one is the full dataset configuration
 runs: 30
 batch_size_train: 128
 batch_size_test: 500

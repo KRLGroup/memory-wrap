@@ -60,8 +60,14 @@ def train_memory_model(model,loaders,optimizer,scheduler, loss_criterion, num_ep
             memory_input = memory_input.to(device)
             
             # perform training step
-            train_step(model=model,inputs=(data,memory_input),targets=y,optimizer=optimizer,loss_criterion=loss_criterion)
+            #train_step(model=model,inputs=(data,memory_input),targets=y,optimizer=optimizer,loss_criterion=loss_criterion)
+            with torch.cuda.amp.autocast():
+                outputs  = model(data,memory_input)
+                loss = loss_criterion(outputs, y)
 
+            scaler.scale(loss).backward()
+            scaler.step(optimizer)
+            scaler.update()
 
 
             #log stuff
@@ -89,8 +95,14 @@ def train_std_model(model,train_loader,optimizer,scheduler, loss_criterion, num_
             y = y.to(device)
             
             # training step
-            train_step(model=model,inputs=data,targets=y,optimizer=optimizer,loss_criterion=loss_criterion)
+            #train_step(model=model,inputs=data,targets=y,optimizer=optimizer,loss_criterion=loss_criterion)
+            with torch.cuda.amp.autocast():
+                outputs  = model(data)
+                loss = loss_criterion(outputs, y)
 
+            scaler.scale(loss).backward()
+            scaler.step(optimizer)
+            scaler.update()
             # log stuff
             if batch_idx % FLAGS.log_interval == 0:
                 print('Train Epoch: {} [({:.0f}%({})]\t'.format(
@@ -116,7 +128,7 @@ def run_experiment(config,modality):
     loss_criterion = torch.nn.CrossEntropyLoss()
 
     # saving/loading stuff
-    save = config['save']
+    save = False #config['save']
     path_saving_model = 'models/{}/{}/{}/{}/'.format(dataset_name,FLAGS.modality, config['model'],config['train_examples'])
     if save and not os.path.isdir(path_saving_model): 
         os.makedirs(path_saving_model)
