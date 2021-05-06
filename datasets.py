@@ -108,10 +108,10 @@ def get_CIFAR10(data_dir, batch_size_train, batch_size_test,batch_size_memory,si
     return train_loader, val_loader, test_loader, mem_loader
 
 def get_CIFAR100(data_dir, batch_size_train, batch_size_test,batch_size_memory,size_train=100000,seed=42):
-    normalize = torchvision.transforms.Normalize(mean=[0.4914, 0.4822, 0.4465],
-                                 std=[0.2023, 0.1994, 0.2010])
+    normalize = torchvision.transforms.Normalize(mean=[0.5071, 0.4867, 0.4408],
+                                 std=[0.2675, 0.2565, 0.2761])
     transforms_train = torchvision.transforms.Compose([
-                torchvision.transforms.RandomHorizontalFlip(),
+            torchvision.transforms.RandomHorizontalFlip(),
                torchvision.transforms.ToTensor(),
                 normalize
     ])
@@ -122,7 +122,7 @@ def get_CIFAR100(data_dir, batch_size_train, batch_size_test,batch_size_memory,s
 
     train_data = torchvision.datasets.CIFAR100(data_dir, train=True, download=True, transform=transforms_train)
     test_data = torchvision.datasets.CIFAR100(data_dir, train=False, download=True, transform=transforms_test)
-    
+
 
     train_dataset, val_dataset = split_dataset(train_data,size_train,6000,seed)
 
