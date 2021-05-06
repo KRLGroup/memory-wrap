@@ -80,8 +80,7 @@ def eval_memory(model,loader,mem_loader,loss_criterion,device):
             
         
         test_accuracy = 100.*(torch.true_divide(correct,len(loader.dataset)))
-    return test_accuracy,  torch.true_divide(test_loss,len(loader))
-
+    return test_accuracy,  test_loss
 
 def eval_memory_vote(model,loader,mem_loader,loss_criterion,device):
     model.eval()
@@ -128,4 +127,4 @@ def eval_std(model,loader,loss_criterion,device):
             test_loss += loss.item()
             
         test_accuracy = 100.*(torch.true_divide(correct,len(loader.dataset)))
-    return test_accuracy, torch.true_divide(test_loss,len(loader))
+    return test_accuracy, test_loss
