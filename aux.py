@@ -1,38 +1,36 @@
 import datasets
 import torch
 import torch.nn as nn
-from architectures import resnet
-from architectures.mobilenet import MobileNetV2
-from architectures.efficientnet import EfficientNetB0
-# from architectures.memory import MemoryWrap,EncoderMemoryWrap
-# from architectures.memory import Identity
+from architectures.resnet import ResNet18, MemoryResNet18, EncoderMemoryResNet18
+from architectures.mobilenet import MobileNetV2, MemoryMobileNetV2,EncoderMemoryMobileNetV2
+from architectures.efficientnet import EfficientNetB0, MemoryEfficientNetB0, EncoderMemoryEfficientNetB0
+
 import statistics
-from architectures.memory_efficientnet import MemoryEfficientNetB0, EncoderMemoryEfficientNetB0
-from architectures.memory_mobilenet import MemoryMobileNetV2,EncoderMemoryMobileNetV2
-from architectures.memory_resnet import MemoryResNet18,EncoderMemoryResNet18
 def get_model(model_name, num_classes, model_type='memory'):
     if model_name == 'efficientnet':
         if model_type=='memory':
-            model = MemoryEfficientNetB0()
+            model = MemoryEfficientNetB0(num_classes)
         elif model_type == 'encoder_memory':
-            model = EncoderMemoryEfficientNetB0()
+            model = EncoderMemoryEfficientNetB0(num_classes)
         else:
-            model = EfficientNetB0()
+            model = EfficientNetB0(num_classes)
     elif model_name == 'resnet18':
         if model_type=='memory':
-            model = MemoryResNet18()
+            model = MemoryResNet18(num_classes)
         elif model_type == 'encoder_memory':
-            model = EncoderMemoryResNet18()
+            model = EncoderMemoryResNet18(num_classes)
+        elif model_type == 'multimemory':
+            model = MultiMemoryResNet18(num_classes)
         else:
-            model = resnet.ResNet18()
+            model = ResNet18(num_classes)
 
     elif model_name == 'mobilenet':
         if model_type=='memory':
-            model = MemoryMobileNetV2()
+            model = MemoryMobileNetV2(num_classes)
         elif model_type == 'encoder_memory':
-            model = EncoderMemoryMobileNetV2()
+            model = EncoderMemoryMobileNetV2(num_classes)
         else:
-            model = MobileNetV2()
+            model = MobileNetV2(num_classes)
     else:
         print("Error: input model name is not valid!")
         exit()
