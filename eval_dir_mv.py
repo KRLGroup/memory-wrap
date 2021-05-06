@@ -72,35 +72,6 @@ def major_voting_baseline(model,loader,mem_loader,loss_criterion,device):
         mvo_accuracy = 100.*(torch.true_divide(correct_mvo,len(loader.dataset)))
         mvy_accuracy = 100.*(torch.true_divide(correct_mvy,len(loader.dataset)))
     return test_accuracy,  mvo_accuracy, mvy_accuracy
-
-def eval_memory_model(model,loader,mem_loader,loss_criterion,device):
-    model.eval()
-    test_loss = 0.0
-    correct = 0
-    correct_mvo = 0
-    correct_mvy = 0
-    with torch.no_grad():
-        for _, (data, target) in enumerate(loader):
-            data = data.to(device)
-            target = target.to(device)
-            memory, y = next(iter(mem_loader))
-            memory = memory.to(device)
-         
-            aux_memory, y_aux =  next(iter(mem_loader))
-            aux_memory = aux_memory.to(device)
-            y = y.to(device)
-
-            output,rw  = model(data,memory,return_weights=True)
-            loss = loss_criterion(output, target) 
-            pred = output.data.max(1, keepdim=True)[1]
-
-            
-            correct += pred.eq(target.data.view_as(pred)).sum().item()
-            test_loss += loss.item()
-            
-        
-        test_accuracy = 100.*(torch.true_divide(correct,len(loader.dataset)))
-    return test_accuracy
     
 
 def run_experiment(path):
@@ -142,12 +113,20 @@ def run_experiment(path):
 
         if modality == 'memory' or modality == 'encoder_memory':
             cum_acc =  []
+            cum_mvo_acc = []
+            cum_mvy_acc = []
             init_eval_time = time.time()
             for _ in range(5):
-                test_acc = eval_memory_model(model,test_loader, mem_loader,loss_criterion,device)
+                test_acc,  mvo_accuracy, mvy_accuracy = major_voting_baseline(model,test_loader, mem_loader,loss_criterion,device)
                 cum_acc.append(test_acc)
+                cum_mvo_acc.append(mvo_accuracy)
+                cum_mvy_acc.append(mvy_accuracy)
             acc_mean = np.mean(cum_acc)
+            mvo_mean = np.mean(cum_mvo_acc)
+            mvy_mean = np.mean(cum_mvy_acc)
             end_eval_time = time.time()
+            run_mvo.append(mvo_mean)
+            run_mvy.append(mvy_mean)
         else:
             init_eval_time = time.time()
             acc_mean, best_loss  = eval_std(model,test_loader,loss_criterion,device)
@@ -158,7 +137,7 @@ def run_experiment(path):
 
 
         # log
-        print("Run:{} | Accuracy {:.2f} | Mean Accuracy:{:.2f} | Std Dev:{:.2f} |  \tE:{:.2f}min".format(run+1,acc_mean, np.mean(run_acc), np.std(run_acc),(end_eval_time -init_eval_time)/60))
+        print("Run:{} | Accuracy {:.2f} | Mean Accuracy:{:.2f} | Std Dev:{:.2f} | MVO Accuracy:{:.2f} | Std Dev:{:.2f} | MVY Accuracy:{:.2f} | Std Dev:{:.2f} \tE:{:.2f}min".format(run+1,acc_mean, np.mean(run_acc), np.std(run_acc),np.mean(run_mvo), np.std(run_mvo),np.mean(run_mvy), np.std(run_mvy),(end_eval_time -init_eval_time)/60))
 
 
 
