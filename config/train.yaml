@@ -35,4 +35,9 @@ CIFAR100:
   num_epochs: 300
   opt_milestones : [150, 225]
   mem_examples:  1000
+CINIC10:
+  num_classes: 10
+  num_epochs: 300
+  opt_milestones : [150, 225]
+  mem_examples:  100
 

@@ -60,12 +60,12 @@ def train_memory_model(model,loaders,optimizer,scheduler, loss_criterion, num_ep
             # perform training step
             #train_step(model=model,inputs=(data,memory_input),targets=y,optimizer=optimizer,loss_criterion=loss_criterion)
             with torch.cuda.amp.autocast():
-                    outputs  = model(data,memory_input)
-                    loss = loss_criterion(outputs, y)
+                outputs  = model(data,memory_input)
+                loss = loss_criterion(outputs, y)
 
-                scaler.scale(loss).backward()
-                scaler.step(optimizer)
-                scaler.update()
+            scaler.scale(loss).backward()
+            scaler.step(optimizer)
+            scaler.update()
 
 
         scheduler.step()# increase scheduler step for each epoch
@@ -87,7 +87,7 @@ def train_std_model(model,train_loader,optimizer,scheduler, loss_criterion, num_
             y = y.to(device)
             
             # training step
-            t#rain_step(model=model,inputs=data,targets=y,optimizer=optimizer,loss_criterion=loss_criterion)
+            #train_step(model=model,inputs=data,targets=y,optimizer=optimizer,loss_criterion=loss_criterion)
             with torch.cuda.amp.autocast():
                 outputs  = model(data)
                 loss = loss_criterion(outputs, y)
