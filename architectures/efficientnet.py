@@ -153,7 +153,7 @@ class EfficientNet(nn.Module):
 
 
 
-def EfficientNetB0():
+def EfficientNetB0(num_classes=10):
     cfg = {
         'num_blocks': [1, 2, 2, 3, 3, 4, 1],
         'expansion': [1, 6, 6, 6, 6, 6, 6],
@@ -163,6 +163,6 @@ def EfficientNetB0():
         'dropout_rate': 0.2,
         'drop_connect_rate': 0.2,
     }
-    return EfficientNet(cfg)
+    return EfficientNet(cfg,num_classes)
 
 

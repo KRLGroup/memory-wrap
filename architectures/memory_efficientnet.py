@@ -7,7 +7,8 @@ Reference: https://github.com/keras-team/keras-applications/blob/master/keras_ap
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from .memory import MemoryWrapLayer,EncoderMemoryWrapLayer
+from .memory import MemoryWrapLayer, EncoderMemoryWrapLayer
+
 
 def swish(x):
     return x * x.sigmoid()
@@ -116,10 +117,11 @@ class MemoryEfficientNet(nn.Module):
                                bias=False)
         self.bn1 = nn.BatchNorm2d(32)
         self.layers = self._make_layers(in_channels=32)
-        
-        #replaced last layer
+
+        # replaced last layer
         #self.linear = nn.Linear(cfg['out_channels'][-1], num_classes)
-        self.mw = MemoryWrapLayer(cfg['out_channels'][-1],num_classes)
+        self.mw = MemoryWrapLayer(cfg['out_channels'][-1], num_classes)
+
     def _make_layers(self, in_channels):
         layers = []
         cfg = [self.cfg[k] for k in ['expansion', 'out_channels', 'num_blocks', 'kernel_size',
@@ -141,7 +143,6 @@ class MemoryEfficientNet(nn.Module):
                 in_channels = out_channels
         return nn.Sequential(*layers)
 
-
     def forward_encoder(self, x):
         out = swish(self.bn1(self.conv1(x)))
         out = self.layers(out)
@@ -153,15 +154,16 @@ class MemoryEfficientNet(nn.Module):
         return out
         return out_mw
 
-    def forward(self, x, ss,return_weights=False):
+    def forward(self, x, ss, return_weights=False):
 
-        #input
+        # input
         out = self.forward_encoder(x)
         out_ss = self.forward_encoder(ss)
 
         # prediction
-        out_mw = self.mw(out,out_ss,return_weights)
+        out_mw = self.mw(out, out_ss, return_weights)
         return out_mw
+
 
 class EncoderMemoryEfficientNet(MemoryEfficientNet):
     def __init__(self, cfg, num_classes=10):
@@ -175,14 +177,13 @@ class EncoderMemoryEfficientNet(MemoryEfficientNet):
                                bias=False)
         self.bn1 = nn.BatchNorm2d(32)
         self.layers = self._make_layers(in_channels=32)
-        
-        #replaced last layer
+
+        # replaced last layer
         #self.linear = nn.Linear(cfg['out_channels'][-1], num_classes)
-        self.mw = EncoderMemoryWrapLayer(cfg['out_channels'][-1],num_classes)
-    
+        self.mw = EncoderMemoryWrapLayer(cfg['out_channels'][-1], num_classes)
 
 
-def MemoryEfficientNetB0():
+def MemoryEfficientNetB0(num_classes=10):
     cfg = {
         'num_blocks': [1, 2, 2, 3, 3, 4, 1],
         'expansion': [1, 6, 6, 6, 6, 6, 6],
@@ -192,9 +193,10 @@ def MemoryEfficientNetB0():
         'dropout_rate': 0.2,
         'drop_connect_rate': 0.2,
     }
-    return MemoryEfficientNet(cfg)
+    return MemoryEfficientNet(cfg, num_classes)
 
-def EncoderMemoryEfficientNetB0():
+
+def EncoderMemoryEfficientNetB0(num_classes=10):
     cfg = {
         'num_blocks': [1, 2, 2, 3, 3, 4, 1],
         'expansion': [1, 6, 6, 6, 6, 6, 6],
@@ -204,6 +206,4 @@ def EncoderMemoryEfficientNetB0():
         'dropout_rate': 0.2,
         'drop_connect_rate': 0.2,
     }
-    return EncoderMemoryEfficientNet(cfg)
-
-
+    return EncoderMemoryEfficientNet(cfg, num_classes)

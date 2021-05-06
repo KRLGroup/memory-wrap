@@ -297,4 +297,5 @@ def EncoderMemoryResNet101(num_classes=10):
 
 def EncoderMemoryResNet152(num_classes=10):
     return EncoderMemoryResNet(Bottleneck,
-                  layers=[3, 8, 36, 3], filters=[64, 128, 256, 512])
+                  layers=[3, 8, 36, 3], filters=[64, 128, 256, 512],
+                  num_classes=num_classes)
