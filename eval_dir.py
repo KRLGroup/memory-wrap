@@ -1,6 +1,5 @@
 
-import torch
-import torch.nn as nn
+import torch # type: ignore
 import numpy as np
 import random
 import absl.flags

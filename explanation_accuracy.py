@@ -1,5 +1,5 @@
 import datasets
-import torch
+import torch # type: ignore
 import numpy as np
 import random
 import absl.flags

@@ -1,4 +1,4 @@
-import torch
+import torch # type: ignore
 import numpy as np
 import random
 import absl.flags
@@ -6,10 +6,10 @@ import absl.app
 import os
 import datasets
 from aux import get_model
-import matplotlib.pyplot as plt
-from captum.attr import IntegratedGradients
-from captum.attr import visualization as viz
-from matplotlib.figure import Figure
+import matplotlib.pyplot as plt # type: ignore
+from captum.attr import IntegratedGradients # type: ignore
+from captum.attr import visualization as viz # type: ignore
+from matplotlib.figure import Figure # type: ignore
 
 
 # user flags

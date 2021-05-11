@@ -1,6 +1,5 @@
 import datasets
-import torch
-import torch.nn as nn
+import torch # type: ignore
 from architectures.resnet import ResNet18, MemoryResNet18, EncoderMemoryResNet18
 from architectures.mobilenet import MobileNetV2, MemoryMobileNetV2,EncoderMemoryMobileNetV2
 from architectures.efficientnet import EfficientNetB0, MemoryEfficientNetB0, EncoderMemoryEfficientNetB0

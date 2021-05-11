@@ -1,9 +1,9 @@
 import os
-import torch
-import torchvision
+import torch # type: ignore
+import torchvision # type: ignore
 import numpy as np
 import random
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt # type: ignore
 import absl.flags
 import absl.app
 import datasets

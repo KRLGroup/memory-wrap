@@ -1,6 +1,6 @@
 import absl.flags
 import absl.app
-import torch
+import torch # type: ignore
 import numpy as np
 import random
 import datasets

@@ -1,6 +1,6 @@
 
-import torch
-import torchvision
+import torch # type: ignore
+import torchvision # type: ignore
 import numpy
 import random
 
