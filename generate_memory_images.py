@@ -11,13 +11,9 @@ import aux
 
 # user flags
 absl.flags.DEFINE_string("path_model", None, "Path of the trained model")
-absl.flags.DEFINE_string("dataset", None, "Dataset to test (SVHN, CIFAR10)")
-absl.flags.DEFINE_string("modality", None, "Fixed or random")
 absl.flags.DEFINE_integer("batch_size_test", 3, "Number of samples for each image")
 
-absl.flags.mark_flag_as_required("dataset")
 absl.flags.mark_flag_as_required("path_model")
-absl.flags.mark_flag_as_required("modality")
 
 FLAGS = absl.flags.FLAGS
 torch.backends.cudnn.deterministic = True
@@ -29,12 +25,16 @@ torch.cuda.manual_seed(seed)
 random.seed(seed)
 
 
-def run(path, dataset_name):
+def run(path):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Device:{}".format(device))    
     # load model
     checkpoint = torch.load(path)
-    model = aux.get_model( checkpoint['model_name'],checkpoint['num_classes'],model_type=FLAGS.modality)
+    modality = checkpoint['modality']
+    if modality not in ['memory','encoder_memory']:
+        raise ValueError(f'Model\'s modality (model type) must be one of [\'memory\',\'encoder_memory\'], not {modality}.')
+    dataset_name = checkpoint['dataset_name']
+    model = aux.get_model( checkpoint['model_name'],checkpoint['num_classes'],model_type=modality)
     model.load_state_dict(checkpoint['model_state_dict'])
     model = model.to(device)
     model.eval()
@@ -42,7 +42,7 @@ def run(path, dataset_name):
 
     # load data
     train_examples = checkpoint['train_examples']
-    if FLAGS.dataset == 'CIFAR10':
+    if dataset_name == 'CIFAR10':
         name_classes= ['airplane','automobile',	'bird',	'cat','deer','dog',	'frog'	,'horse','ship','truck']
     else:
         name_classes = range(checkpoint['num_classes'])
@@ -53,7 +53,7 @@ def run(path, dataset_name):
     memory_iter = iter(mem_loader)
     
     #saving stuff
-    dir_save = "images/mem_images/"+FLAGS.dataset+"/"+FLAGS.modality+"/" + checkpoint['model_name'] + "/"
+    dir_save = "images/mem_images/"+dataset_name+"/"+modality+"/" + checkpoint['model_name'] + "/"
     if not os.path.isdir(dir_save): 
         os.makedirs(dir_save)
 
@@ -114,7 +114,7 @@ def run(path, dataset_name):
 
 def main(argv):
 
-    run(FLAGS.path_model,FLAGS.dataset)
+    run(FLAGS.path_model)
 
 if __name__ == '__main__':
   absl.app.run(main)

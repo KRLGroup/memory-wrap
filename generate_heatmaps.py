@@ -13,12 +13,8 @@ import captum.attr # type: ignore
 
 # user flags
 absl.flags.DEFINE_string("path_model", None, "Path of the trained model")
-absl.flags.DEFINE_string("dataset", None, "Dataset to test (SVHN, CIFAR10 or CIFAR100)")
-absl.flags.DEFINE_string("modality", None, "std, memory or encoder_memory")
 
-absl.flags.mark_flag_as_required("dataset")
 absl.flags.mark_flag_as_required("path_model")
-absl.flags.mark_flag_as_required("modality")
 
 FLAGS = absl.flags.FLAGS
 
@@ -156,14 +152,19 @@ def visualize_image_mult_attr(
     return plt_fig, plt_axis
 
 
-def run(path, dataset_name):
+def run(path):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Device:{}".format(device))
     batch_size_test=1
     
     # load model
     checkpoint = torch.load(path)
-    model = aux.get_model( checkpoint['model_name'],checkpoint['num_classes'],model_type=FLAGS.modality)
+    modality = checkpoint['modality']
+    if modality not in ['memory','encoder_memory']:
+        raise ValueError(f'Model\'s modality (model type) must be one of [\'memory\',\'encoder_memory\'], not {modality}.')
+    dataset_name = checkpoint['dataset_name']
+
+    model = aux.get_model( checkpoint['model_name'],checkpoint['num_classes'],model_type= modality)
     model.load_state_dict(checkpoint['model_state_dict'])
     model = model.to(device)
     model.eval()
@@ -171,7 +172,7 @@ def run(path, dataset_name):
 
     # load data
     train_examples = checkpoint['train_examples']
-    if FLAGS.dataset == 'CIFAR10':
+    if dataset_name == 'CIFAR10':
         name_classes= ['airplane','automobile',	'bird',	'cat','deer','dog',	'frog'	,'horse','ship','truck']
     else:
         name_classes = range(checkpoint['num_classes'])
@@ -189,7 +190,7 @@ def run(path, dataset_name):
         return transformed_im
 
     #saving stuff
-    dir_save = "images/saliency/"+FLAGS.dataset+"/"+FLAGS.modality+"/" + checkpoint['model_name'] + "/"
+    dir_save = "images/saliency/"+dataset_name+"/"+modality+"/" + checkpoint['model_name'] + "/"
     if not os.path.isdir(dir_save): 
         os.makedirs(dir_save)
 
@@ -234,15 +235,15 @@ def run(path, dataset_name):
             # M_c u M_e : set of sample with a positive impact on prediction
             m_ec = memory_sorted_index[ind][mem_val[ind]>0]
             pred_mec = memory_predictions[m_ec]
-            mc = memory_sorted_index[ind][(pred_mec != predictions[ind]).nonzero(as_tuple=True)]
-            me = memory_sorted_index[ind][(pred_mec == predictions[ind]).nonzero(as_tuple=True)]
+            mc = memory_sorted_index[ind][(pred_mec != predictions[ind]).nonzero(as_tuple=True)].tolist()
+            me = memory_sorted_index[ind][(pred_mec == predictions[ind]).nonzero(as_tuple=True)].tolist()
 
             #get images
             current_image = get_image(images[ind])
-            if len(mc > 0):
+            if mc:
                 top_counter_index = mc[0]
                 counter_image = get_image(memory[top_counter_index])
-            if len(me > 0):
+            if me:
                 top_example_index = me[0]
                 example_memory_image = get_image(memory[top_example_index])
 
@@ -255,11 +256,11 @@ def run(path, dataset_name):
             (grad_im,grad_mem) = saliency.attribute((input_selected,reduced_mem), 
 baselines=(baseline_input,baseline_memory), target=predictions[ind].item(), internal_batch_size=2, n_steps=40 )
             grad_input = get_image(grad_im,False)
-            if len(mc>0):
+            if mc:
                 # get counterfactual with the highest weight
                 top_counter_index_grad = (pred_mec != predictions[ind]).nonzero(as_tuple=True)[0][0]
                 grad_counter = get_image(grad_mem[top_counter_index_grad],False)
-            if len(me>0):
+            if me:
                 # get explanation by example with the highest weight
                 top_example_index_grad = (pred_mec == predictions[ind]).nonzero(as_tuple=True)[0][0]
                 grad_example = get_image(grad_mem[top_example_index_grad],False)
@@ -267,13 +268,13 @@ baselines=(baseline_input,baseline_memory), target=predictions[ind].item(), inte
 
 
             # visualize
-            if len(mc)>0 and  len(me)>0:
+            if mc and  me:
                 # case where there are counterfactuals and explanation by examples in memory
                 fig,_ = visualize_image_mult_attr([None,grad_input,None,grad_example,None,grad_counter],[current_image,example_memory_image,counter_image],type_viz,show_grad,['Input\nPredict:{}'.format(name_classes[predictions[ind]]),'Saliency','Example\nw:{:.2f}'.format(rw[ind][top_example_index]),'Saliency', 'Counterfactual\nw:{:.2f}'.format(rw[ind][top_counter_index]),'Saliency'],use_pyplot=False)
-            elif len(mc)>0:
+            elif mc:
                 # cases where there are only counterfactuals  in memory
                 fig,_ = visualize_image_mult_attr([None,grad_input,None,grad_counter],[current_image,counter_image],type_viz,show_grad,['Input\nPredict:{}'.format(name_classes[predictions[ind]]),'Saliency', 'Counterfactual\nw:{:.2f}'.format(rw[ind][top_counter_index]),'Saliency'],use_pyplot=False)
-            elif len(me)>0:
+            elif me:
                 # cases where there are only explanations by expamples in memory
                 fig,_ = visualize_image_mult_attr([None,grad_input,None,grad_example],[current_image,example_memory_image],type_viz,show_grad,['Input\nPredict:{}'.format(name_classes[predictions[ind]]),'Saliency','Example\nw:{:.2f}'.format(rw[ind][top_example_index]),'Saliency'],use_pyplot=False)
 
@@ -283,7 +284,7 @@ baselines=(baseline_input,baseline_memory), target=predictions[ind].item(), inte
 
 
 def main(args):
-    run(FLAGS.path_model,FLAGS.dataset)
+    run(FLAGS.path_model)
 
 if __name__ == '__main__':
   absl.app.run(main)
