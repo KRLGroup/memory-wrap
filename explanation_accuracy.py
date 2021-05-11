@@ -28,7 +28,7 @@ torch.manual_seed(seed)
 torch.cuda.manual_seed(seed)
 random.seed(seed)
 
-def eval_memory(model,loader,mem_loader,loss_criterion,device):
+def eval_memory(model,loader,mem_loader,device):
     model.eval()
     expl_max = 0
 
@@ -41,7 +41,7 @@ def eval_memory(model,loader,mem_loader,loss_criterion,device):
         for _, (data, target) in enumerate(loader):
             data = data.to(device)
             target = target.to(device)
-            memory, y = next(iter(mem_loader))
+            memory, _ = next(iter(mem_loader))
             memory = memory.to(device)
 
             # get output
@@ -105,12 +105,11 @@ def run_evaluation(path, dataset_name):
 
 
         # perform validation
-        loss_criterion = torch.nn.CrossEntropyLoss()
         cum_acc =  []
         cum_acc_counter = []
         cum_acc_ex = []
         for _ in range(10):
-            exp_max_acc, counter_acc,example_acc = eval_memory(model,test_loader,mem_loader,loss_criterion,device)
+            exp_max_acc, counter_acc,example_acc = eval_memory(model,test_loader,mem_loader,device)
             cum_acc.append(exp_max_acc)
             cum_acc_counter.append(counter_acc)
             cum_acc_ex.append(example_acc)
@@ -128,7 +127,7 @@ def run_evaluation(path, dataset_name):
     print("Explanation accuracy (mean):{:.2f}\t(std_dev):{:.2f}\t  counterfactual acc mean:{:.2f}\t  counterfactual std:{:.2f}\t  example acc mean:{:.2f}\t  example std:{:.2f}".format(np.mean(expl_acc),np.std(expl_acc),np.mean(expl_acc_counter),np.std(expl_acc_counter),np.mean(expl_acc_ex),np.std(expl_acc_ex)))
 
 
-def main(argv):
+def main():
 
     run_evaluation(FLAGS.path_models,FLAGS.dataset)
 

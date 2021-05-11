@@ -140,19 +140,18 @@ def get_CIFAR100(data_dir, batch_size_train, batch_size_test,batch_size_memory,s
 def get_CINIC10(data_dir, batch_size_train, batch_size_test,batch_size_memory,size_train=100000,seed=42):
     normalize = torchvision.transforms.Normalize(mean=[0.47889522, 0.47227842, 0.43047404], std=[0.24205776, 0.23828046, 0.25874835])
   
-    cinic_directory = "datasets/"
+    cinic_directory = data_dir+ "CINIC10/"
 
     data = torchvision.datasets.ImageFolder(cinic_directory + '/train',
     	transform=torchvision.transforms.Compose([torchvision.transforms.ToTensor(),
         normalize]))
-    train_dataset, val_dataset = split_dataset(data,size_train,10,seed)
+    # get subset of train dataset
+    train_dataset, _ = split_dataset(data,size_train,10,seed)
     train_loader = torch.utils.data.DataLoader(
     train_dataset,
     batch_size=batch_size_train, shuffle=True)
 
-    mem_loader = torch.utils.data.DataLoader(
-    train_dataset,
-    batch_size=batch_size_memory, shuffle=True)
+    mem_loader = torch.utils.data.DataLoader(    train_dataset,   batch_size=batch_size_memory, shuffle=True)
 
     test_loader = torch.utils.data.DataLoader(
     torchvision.datasets.ImageFolder(cinic_directory + '/test',

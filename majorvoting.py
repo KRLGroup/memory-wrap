@@ -7,8 +7,7 @@ import absl.flags
 import absl.app
 import os
 import yaml
-import datasets
-from aux import get_model,eval_memory,get_loaders,eval_std, eval_memory_vote
+from aux import get_model,get_loaders,eval_std
 import time
 import pickle
 
@@ -43,7 +42,7 @@ def major_voting_baseline(model,loader,mem_loader,loss_criterion,device):
             memory, y = next(iter(mem_loader))
             memory = memory.to(device)
          
-            aux_memory, y_aux =  next(iter(mem_loader))
+            aux_memory, _ =  next(iter(mem_loader))
             aux_memory = aux_memory.to(device)
             y = y.to(device)
 
@@ -78,7 +77,7 @@ def major_voting_baseline(model,loader,mem_loader,loss_criterion,device):
 
 def train_memory_model(model,loaders,optimizer,scheduler, loss_criterion, num_epochs,device):
         
-    train_loader, val_loader, mem_loader = loaders
+    train_loader, _, mem_loader = loaders
     
     # training process 
     model.train()
@@ -102,7 +101,6 @@ def train_memory_model(model,loaders,optimizer,scheduler, loss_criterion, num_ep
             scaler.scale(loss).backward()
             scaler.step(optimizer)
             scaler.update()
-            #train_step(model=model,inputs=(data,memory_input),targets=y,optimizer=optimizer,loss_criterion=loss_criterion)
 
             #log stuff
             if batch_idx % FLAGS.log_interval == 0:
@@ -129,7 +127,6 @@ def train_std_model(model,train_loader,optimizer,scheduler, loss_criterion, num_
             y = y.to(device)
             
             # training step
-            #train_step(model=model,inputs=data,targets=y,optimizer=optimizer,loss_criterion=loss_criterion)
             with torch.cuda.amp.autocast():
                 outputs  = model(data)
                 loss = loss_criterion(outputs, y)
@@ -186,8 +183,6 @@ def run_experiment(config,modality):
         initial_run = info['run_num']
         run_acc = info['accuracies']
 
-    def count_parameters(model):
-        return sum(p.numel() for p in model.parameters() if p.requires_grad)
        
     for run in range(initial_run,config['runs']):
         run_time = time.time()
@@ -226,7 +221,7 @@ def run_experiment(config,modality):
             model = train_std_model(model,train_loader,optimizer,scheduler,loss_criterion,config[dataset_name]['num_epochs'],device)
             train_time = time.time()
             init_eval_time = time.time()
-            acc_mean, best_loss  = eval_std(model,test_loader,loss_criterion,device)
+            acc_mean, _  = eval_std(model,test_loader,loss_criterion,device)
             end_eval_time = time.time()
 
         # stats
@@ -255,7 +250,7 @@ def run_experiment(config,modality):
 
 
 
-def main(argv):
+def main():
 
     config_file = open(r'config/train.yaml')
     config = yaml.safe_load(config_file)

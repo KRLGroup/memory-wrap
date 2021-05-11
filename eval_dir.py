@@ -6,11 +6,9 @@ import random
 import absl.flags
 import absl.app
 import os
-import yaml
 import datasets
-from aux import get_model,eval_memory,get_loaders,eval_std, eval_memory_vote
+from aux import get_model,eval_std, 
 import time
-import pickle
 
 # user flags
 absl.flags.DEFINE_string("path", None, "std, memory or encoder_memory")
@@ -41,7 +39,7 @@ def major_voting_baseline(model,loader,mem_loader,loss_criterion,device):
             memory, y = next(iter(mem_loader))
             memory = memory.to(device)
          
-            aux_memory, y_aux =  next(iter(mem_loader))
+            aux_memory, _ =  next(iter(mem_loader))
             aux_memory = aux_memory.to(device)
             y = y.to(device)
 
@@ -77,8 +75,6 @@ def eval_memory_model(model,loader,mem_loader,loss_criterion,device):
     model.eval()
     test_loss = 0.0
     correct = 0
-    correct_mvo = 0
-    correct_mvy = 0
     with torch.no_grad():
         for _, (data, target) in enumerate(loader):
             data = data.to(device)
@@ -86,11 +82,11 @@ def eval_memory_model(model,loader,mem_loader,loss_criterion,device):
             memory, y = next(iter(mem_loader))
             memory = memory.to(device)
          
-            aux_memory, y_aux =  next(iter(mem_loader))
+            aux_memory, _ =  next(iter(mem_loader))
             aux_memory = aux_memory.to(device)
             y = y.to(device)
 
-            output,rw  = model(data,memory,return_weights=True)
+            output,_  = model(data,memory)
             loss = loss_criterion(output, target) 
             pred = output.data.max(1, keepdim=True)[1]
 
@@ -109,15 +105,12 @@ def run_experiment(path):
     loss_criterion = torch.nn.CrossEntropyLoss()
     list_models = [name_file for name_file in os.listdir(path) if name_file.endswith('.pt')]
     run_acc = []
-    run_mvo = []
-    run_mvy = []
-    for indx, name_model in enumerate(sorted(list_models)):
+    for _, name_model in enumerate(sorted(list_models)):
 
         # load model
         run,_ = name_model.split('.')
         run = int(run)-1
         set_seed(run)
-        #name_model = '1.pt'
         checkpoint = torch.load(path+name_model)
         #   load model
         modality = checkpoint['modality']
@@ -131,14 +124,7 @@ def run_experiment(path):
         mem_examples = checkpoint['mem_examples']
         train_examples = checkpoint['train_examples']
         load_dataset = getattr(datasets, 'get_'+checkpoint['dataset_name'])
-        train_loader, val_loader, test_loader, mem_loader = load_dataset('../datasets',batch_size_train=128, batch_size_test=500,batch_size_memory=mem_examples,size_train=train_examples,seed=run)
-
-        num_classes = checkpoint['num_classes']
-
-
-        
-
-            
+        _, _, test_loader, mem_loader = load_dataset('../datasets',batch_size_train=128, batch_size_test=500,batch_size_memory=mem_examples,size_train=train_examples,seed=run)
 
         if modality == 'memory' or modality == 'encoder_memory':
             cum_acc =  []
@@ -150,7 +136,7 @@ def run_experiment(path):
             end_eval_time = time.time()
         else:
             init_eval_time = time.time()
-            acc_mean, best_loss  = eval_std(model,test_loader,loss_criterion,device)
+            acc_mean, _  = eval_std(model,test_loader,loss_criterion,device)
             end_eval_time = time.time()
 
         # stats
@@ -166,7 +152,7 @@ def run_experiment(path):
 
 
 
-def main(argv):
+def main():
 
     run_experiment(FLAGS.path)
 

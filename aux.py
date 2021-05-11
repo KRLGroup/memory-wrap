@@ -19,8 +19,6 @@ def get_model(model_name, num_classes, model_type='memory'):
             model = MemoryResNet18(num_classes)
         elif model_type == 'encoder_memory':
             model = EncoderMemoryResNet18(num_classes)
-        elif model_type == 'multimemory':
-            model = MultiMemoryResNet18(num_classes)
         else:
             model = ResNet18(num_classes)
 
@@ -68,7 +66,7 @@ def eval_memory(model,loader,mem_loader,loss_criterion,device):
         for _, (data, target) in enumerate(loader):
             data = data.to(device)
             target = target.to(device)
-            memory, y = next(iter(mem_loader))
+            memory, _ = next(iter(mem_loader))
             memory = memory.to(device)
 
             output  = model(data,memory)
@@ -91,8 +89,8 @@ def eval_memory_vote(model,loader,mem_loader,loss_criterion,device):
             data = data.to(device)
             target = target.to(device)
             outputs = []
-            for iteration in range(10):
-                memory, y = next(iter(mem_loader))
+            for _ in range(10):
+                memory, _ = next(iter(mem_loader))
                 memory = memory.to(device)
 
                 output  = model(data,memory)

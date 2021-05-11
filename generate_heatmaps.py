@@ -1,5 +1,4 @@
 import torch
-import torchvision
 import numpy as np
 import random
 import absl.flags
@@ -200,7 +199,7 @@ def run(path, dataset_name):
     show_grad = "positive"
     type_viz = "blended_heat_map"
 
-    for batch_idx, (images, labels) in enumerate(test_loader):
+    for batch_idx, (images, _) in enumerate(test_loader):
         try:
             memory, _ = next(memory_iter)
         except StopIteration:
@@ -271,20 +270,20 @@ baselines=(baseline_input,baseline_memory), target=predictions[ind].item(), inte
             # visualize
             if len(mc)>0 and  len(me)>0:
                 # case where there are counterfactuals and explanation by examples in memory
-                fig,axis = visualize_image_mult_attr([None,grad_input,None,grad_example,None,grad_counter],[current_image,example_memory_image,counter_image],type_viz,show_grad,['Input\nPredict:{}'.format(name_classes[predictions[ind]]),'Saliency','Example\nw:{:.2f}'.format(rw[ind][top_example_index]),'Saliency', 'Counterfactual\nw:{:.2f}'.format(rw[ind][top_counter_index]),'Saliency'],use_pyplot=False)
+                fig,_ = visualize_image_mult_attr([None,grad_input,None,grad_example,None,grad_counter],[current_image,example_memory_image,counter_image],type_viz,show_grad,['Input\nPredict:{}'.format(name_classes[predictions[ind]]),'Saliency','Example\nw:{:.2f}'.format(rw[ind][top_example_index]),'Saliency', 'Counterfactual\nw:{:.2f}'.format(rw[ind][top_counter_index]),'Saliency'],use_pyplot=False)
             elif len(mc)>0:
                 # cases where there are only counterfactuals  in memory
-                fig,axis = visualize_image_mult_attr([None,grad_input,None,grad_counter],[current_image,counter_image],type_viz,show_grad,['Input\nPredict:{}'.format(name_classes[predictions[ind]]),'Saliency', 'Counterfactual\nw:{:.2f}'.format(rw[ind][top_counter_index]),'Saliency'],use_pyplot=False)
+                fig,_ = visualize_image_mult_attr([None,grad_input,None,grad_counter],[current_image,counter_image],type_viz,show_grad,['Input\nPredict:{}'.format(name_classes[predictions[ind]]),'Saliency', 'Counterfactual\nw:{:.2f}'.format(rw[ind][top_counter_index]),'Saliency'],use_pyplot=False)
             elif len(me)>0:
                 # cases where there are only explanations by expamples in memory
-                fig,axis = visualize_image_mult_attr([None,grad_input,None,grad_example],[current_image,example_memory_image],type_viz,show_grad,['Input\nPredict:{}'.format(name_classes[predictions[ind]]),'Saliency','Example\nw:{:.2f}'.format(rw[ind][top_example_index]),'Saliency'],use_pyplot=False)
+                fig,_ = visualize_image_mult_attr([None,grad_input,None,grad_example],[current_image,example_memory_image],type_viz,show_grad,['Input\nPredict:{}'.format(name_classes[predictions[ind]]),'Saliency','Example\nw:{:.2f}'.format(rw[ind][top_example_index]),'Saliency'],use_pyplot=False)
 
             fig.savefig(dir_save+str(batch_idx*batch_size_test+ind)+".png")
             plt.close()
             print('{}/{}'.format(batch_idx,len(test_loader)),end='\r')
 
 
-def main(argv):
+def main():
     run(FLAGS.path_model,FLAGS.dataset)
 
 if __name__ == '__main__':
