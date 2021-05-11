@@ -7,8 +7,7 @@ import absl.flags
 import absl.app
 import os
 import yaml
-import datasets
-from aux import get_model,eval_memory,get_loaders,eval_std, eval_memory_vote
+from aux import get_model,get_loaders,eval_std
 import time
 import pickle
 
@@ -29,20 +28,9 @@ def set_seed(seed):
     os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
     return random_state
 
-def train_step(model, inputs, targets, optimizer, loss_criterion):    
-    optimizer.zero_grad() # zeroing gradients
-    if type(inputs) is tuple:
-        outputs  = model(*inputs) # get output
-    else:
-        outputs = model(inputs)
-    loss = loss_criterion(outputs, targets)  # compute loss
-    loss.backward() # compute gradients
-    optimizer.step() # update weights
-    return loss
-
 def train_memory_model(model,loaders,optimizer,scheduler, loss_criterion, num_epochs,device):
         
-    train_loader, val_loader, mem_loader = loaders
+    train_loader, _, mem_loader = loaders
     
     # training process 
     model.train()
@@ -58,7 +46,6 @@ def train_memory_model(model,loaders,optimizer,scheduler, loss_criterion, num_ep
             memory_input = memory_input.to(device)
             
             # perform training step
-            #train_step(model=model,inputs=(data,memory_input),targets=y,optimizer=optimizer,loss_criterion=loss_criterion)
             with torch.cuda.amp.autocast():
                 outputs  = model(data,memory_input)
                 loss = loss_criterion(outputs, y)
@@ -66,7 +53,11 @@ def train_memory_model(model,loaders,optimizer,scheduler, loss_criterion, num_ep
             scaler.scale(loss).backward()
             scaler.step(optimizer)
             scaler.update()
-
+            #log stuff
+            if batch_idx % 100 == 0:
+                print('Train Epoch: {} [({:.0f}%({})]\t'.format(
+                epoch,
+                100. * batch_idx / len(train_loader), len(train_loader.dataset)),end='\r')
 
         scheduler.step()# increase scheduler step for each epoch
 
@@ -87,7 +78,6 @@ def train_std_model(model,train_loader,optimizer,scheduler, loss_criterion, num_
             y = y.to(device)
             
             # training step
-            #train_step(model=model,inputs=data,targets=y,optimizer=optimizer,loss_criterion=loss_criterion)
             with torch.cuda.amp.autocast():
                 outputs  = model(data)
                 loss = loss_criterion(outputs, y)
@@ -95,7 +85,12 @@ def train_std_model(model,train_loader,optimizer,scheduler, loss_criterion, num_
             scaler.scale(loss).backward()
             scaler.step(optimizer)
             scaler.update()
-        
+            
+            #log stuff
+            if batch_idx % 100 == 0:
+                print('Train Epoch: {} [({:.0f}%({})]\t'.format(
+                epoch,
+                100. * batch_idx / len(train_loader), len(train_loader.dataset)),end='\r')
         scheduler.step() # increase scheduler step for each epoch
 
     return model
@@ -134,10 +129,7 @@ def run_experiment(config,modality):
         print("Restarting training process\n")
         info = pickle.load( open(  path_saving_model+"conf.p", "rb" ) )
         initial_run = info['run_num']
-        run_acc = info['accuracies']
 
-    def count_parameters(model):
-        return sum(p.numel() for p in model.parameters() if p.requires_grad)
        
     for run in range(initial_run,config['runs']):
         run_time = time.time()
@@ -160,10 +152,10 @@ def run_experiment(config,modality):
         else:
             model = train_std_model(model,train_loader,optimizer,scheduler,loss_criterion,config[dataset_name]['num_epochs'],device)
             train_time = time.time()
-            best_acc, best_loss  = eval_std(model,test_loader,loss_criterion,device)
+            best_acc, _  = eval_std(model,test_loader,loss_criterion,device)
             print(best_acc)
         # save
-        if path_saving_model:
+        if save and path_saving_model:
             saved_name = "{}.pt".format(run+1)
             save_path = os.path.join(path_saving_model, saved_name)
             torch.save({'model_state_dict':model.state_dict(),
@@ -183,7 +175,7 @@ def run_experiment(config,modality):
 
 
 
-def main(argv):
+def main():
 
     config_file = open(r'config/train.yaml')
     config = yaml.safe_load(config_file)
