@@ -9,8 +9,8 @@ import aux
 
 # user flags
 absl.flags.DEFINE_string("path_models", None, "Path of the trained model")
-absl.flags.DEFINE_string("dataset", None, "Dataset to test (SVHN, CIFAR10 or CIFAR100)")
-absl.flags.DEFINE_string("modality", None, "Fixed or random")
+absl.flags.DEFINE_string("dataset", None, "Dataset to test (SVHN, CIFAR10)")
+absl.flags.DEFINE_string("modality", None, "std, memory or encoder_memory")
 
 absl.flags.mark_flag_as_required("dataset")
 absl.flags.mark_flag_as_required("path_models")
@@ -127,7 +127,7 @@ def run_evaluation(path, dataset_name):
     print("Explanation accuracy (mean):{:.2f}\t(std_dev):{:.2f}\t  counterfactual acc mean:{:.2f}\t  counterfactual std:{:.2f}\t  example acc mean:{:.2f}\t  example std:{:.2f}".format(np.mean(expl_acc),np.std(expl_acc),np.mean(expl_acc_counter),np.std(expl_acc_counter),np.mean(expl_acc_ex),np.std(expl_acc_ex)))
 
 
-def main():
+def main(args):
 
     run_evaluation(FLAGS.path_models,FLAGS.dataset)
 

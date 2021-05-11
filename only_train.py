@@ -12,7 +12,7 @@ import aux
 
 # user flags
 absl.flags.DEFINE_string("modality", None, "std, memory or encoder_memory")
-absl.flags.DEFINE_bool("continue_train", False, "std, memory or mlp")
+absl.flags.DEFINE_bool("continue_train", False, "restart the training process from last run")
 absl.flags.mark_flag_as_required("modality")
 FLAGS = absl.flags.FLAGS
 
@@ -174,7 +174,7 @@ def run_experiment(config,modality):
 
 
 
-def main():
+def main(argv=None):
 
     config_file = open(r'config/train.yaml')
     config = yaml.safe_load(config_file)

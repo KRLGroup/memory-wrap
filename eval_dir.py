@@ -10,7 +10,7 @@ import aux
 import time
 
 # user flags
-absl.flags.DEFINE_string("path", None, "std, memory or encoder_memory")
+absl.flags.DEFINE_string("path", None, "dir path where models are stored")
 absl.flags.mark_flag_as_required("path")
 FLAGS = absl.flags.FLAGS
 
@@ -151,7 +151,7 @@ def run_experiment(path):
 
 
 
-def main():
+def main(argv=None):
 
     run_experiment(FLAGS.path)
 

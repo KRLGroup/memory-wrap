@@ -59,7 +59,7 @@ def run_evaluation(path, dataset_name):
 
 
 
-def main():
+def main(argv=None):
 
     run_evaluation(FLAGS.path_model,FLAGS.dataset)
 

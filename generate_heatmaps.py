@@ -14,7 +14,7 @@ import captum.attr # type: ignore
 # user flags
 absl.flags.DEFINE_string("path_model", None, "Path of the trained model")
 absl.flags.DEFINE_string("dataset", None, "Dataset to test (SVHN, CIFAR10 or CIFAR100)")
-absl.flags.DEFINE_string("modality", None, "Fixed or random")
+absl.flags.DEFINE_string("modality", None, "std, memory or encoder_memory")
 
 absl.flags.mark_flag_as_required("dataset")
 absl.flags.mark_flag_as_required("path_model")
@@ -282,7 +282,7 @@ baselines=(baseline_input,baseline_memory), target=predictions[ind].item(), inte
             print('{}/{}'.format(batch_idx,len(test_loader)),end='\r')
 
 
-def main():
+def main(args):
     run(FLAGS.path_model,FLAGS.dataset)
 
 if __name__ == '__main__':
