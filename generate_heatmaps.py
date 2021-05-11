@@ -5,11 +5,10 @@ import absl.flags
 import absl.app
 import os
 import datasets
-from aux import get_model
+import aux
 import matplotlib.pyplot as plt # type: ignore
-from captum.attr import IntegratedGradients # type: ignore
-from captum.attr import visualization as viz # type: ignore
-from matplotlib.figure import Figure # type: ignore
+from matplotlib import figure # type: ignore
+import captum.attr # type: ignore
 
 
 # user flags
@@ -113,7 +112,7 @@ def visualize_image_mult_attr(
     if use_pyplot:
         plt_fig = plt.figure(figsize=fig_size)
     else:
-        plt_fig = Figure(figsize=fig_size)
+        plt_fig = figure.Figure(figsize=fig_size)
     el_4cols = int(len(attr)/len(original_image))
     plt_axis = plt_fig.subplots(len(original_image), el_4cols)
 
@@ -126,7 +125,7 @@ def visualize_image_mult_attr(
         column = int(i%el_4cols)
         if attr[i] is None:
             meth = "original_image"
-            viz.visualize_image_attr(
+            captum.attr.visualization.visualize_image_attr(
             attr[i],
             original_image=image,
             method=meth,
@@ -137,7 +136,7 @@ def visualize_image_mult_attr(
         )
         else:
             meth = method
-            viz.visualize_image_attr(
+            captum.attr.visualization.visualize_image_attr(
             attr[i],
             original_image=image,
             method=meth,
@@ -164,7 +163,7 @@ def run(path, dataset_name):
     
     # load model
     checkpoint = torch.load(path)
-    model = get_model( checkpoint['model_name'],checkpoint['num_classes'],model_type=FLAGS.modality)
+    model = aux.get_model( checkpoint['model_name'],checkpoint['num_classes'],model_type=FLAGS.modality)
     model.load_state_dict(checkpoint['model_state_dict'])
     model = model.to(device)
     model.eval()
@@ -195,7 +194,7 @@ def run(path, dataset_name):
         os.makedirs(dir_save)
 
     # run heatmap
-    saliency = IntegratedGradients(model)
+    saliency = captum.attr.IntegratedGradients(model)
     show_grad = "positive"
     type_viz = "blended_heat_map"
 

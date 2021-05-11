@@ -5,7 +5,7 @@ import random
 import absl.flags
 import absl.app
 import os
-from aux import get_model
+import aux
 
 # user flags
 absl.flags.DEFINE_string("path_models", None, "Path of the trained model")
@@ -95,7 +95,7 @@ def run_evaluation(path, dataset_name):
         # load model
         checkpoint = torch.load(path+name_model)
         model_name = checkpoint['model_name']
-        model = get_model(model_name,checkpoint['num_classes'],model_type=FLAGS.modality)
+        model = aux.get_model(model_name,checkpoint['num_classes'],model_type=FLAGS.modality)
         model.load_state_dict(checkpoint['model_state_dict'])
         model = model.to(device)
 

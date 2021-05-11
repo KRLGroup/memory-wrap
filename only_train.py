@@ -6,9 +6,9 @@ import absl.flags
 import absl.app
 import os
 import yaml
-from aux import get_model,get_loaders,eval_std
 import time
 import pickle
+import aux 
 
 # user flags
 absl.flags.DEFINE_string("modality", None, "std, memory or encoder_memory")
@@ -134,14 +134,14 @@ def run_experiment(config,modality):
         run_time = time.time()
         set_seed(run)
         torch.cuda.init()
-        model = get_model(config['model'],num_classes,model_type=modality)
+        model = aux.get_model(config['model'],num_classes,model_type=modality)
         model = model.to(device)
         # training parameters
         optimizer = torch.optim.SGD(model.parameters(),**dict_optim)
         scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer,  milestones=opt_milestones)
         
         # get dataset
-        train_loader, val_loader, test_loader, mem_loader = get_loaders(config,run)
+        train_loader, val_loader, test_loader, mem_loader = aux.get_loaders(config,run)
 
          # training process
         if modality == 'memory' or modality == 'encoder_memory':
@@ -151,7 +151,7 @@ def run_experiment(config,modality):
         else:
             model = train_std_model(model,train_loader,optimizer,scheduler,loss_criterion,config[dataset_name]['num_epochs'],device)
             train_time = time.time()
-            best_acc, _  = eval_std(model,test_loader,loss_criterion,device)
+            best_acc, _  = aux.eval_std(model,test_loader,loss_criterion,device)
             print(best_acc)
         # save
         if save and path_saving_model:

@@ -1,33 +1,33 @@
 import datasets
 import torch # type: ignore
-from architectures.resnet import ResNet18, MemoryResNet18, EncoderMemoryResNet18
-from architectures.mobilenet import MobileNetV2, MemoryMobileNetV2,EncoderMemoryMobileNetV2
-from architectures.efficientnet import EfficientNetB0, MemoryEfficientNetB0, EncoderMemoryEfficientNetB0
+from architectures import resnet
+from architectures import mobilenet
+from architectures import efficientnet
 
 import statistics
 def get_model(model_name, num_classes, model_type='memory'):
     if model_name == 'efficientnet':
         if model_type=='memory':
-            model = MemoryEfficientNetB0(num_classes)
+            model = efficientnet.MemoryEfficientNetB0(num_classes)
         elif model_type == 'encoder_memory':
-            model = EncoderMemoryEfficientNetB0(num_classes)
+            model = efficientnet.EncoderMemoryEfficientNetB0(num_classes)
         else:
-            model = EfficientNetB0(num_classes)
+            model = efficientnet.EfficientNetB0(num_classes)
     elif model_name == 'resnet18':
         if model_type=='memory':
-            model = MemoryResNet18(num_classes)
+            model = resnet.MemoryResNet18(num_classes)
         elif model_type == 'encoder_memory':
-            model = EncoderMemoryResNet18(num_classes)
+            model = resnet.EncoderMemoryResNet18(num_classes)
         else:
-            model = ResNet18(num_classes)
+            model = resnet.ResNet18(num_classes)
 
     elif model_name == 'mobilenet':
         if model_type=='memory':
-            model = MemoryMobileNetV2(num_classes)
+            model = mobilenet.MemoryMobileNetV2(num_classes)
         elif model_type == 'encoder_memory':
-            model = EncoderMemoryMobileNetV2(num_classes)
+            model = mobilenet.EncoderMemoryMobileNetV2(num_classes)
         else:
-            model = MobileNetV2(num_classes)
+            model = mobilenet.MobileNetV2(num_classes)
     else:
         print("Error: input model name is not valid!")
         exit()

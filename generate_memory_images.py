@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt # type: ignore
 import absl.flags
 import absl.app
 import datasets
-from aux import get_model
+import aux
 
 # user flags
 absl.flags.DEFINE_string("path_model", None, "Path of the trained model")
@@ -34,7 +34,7 @@ def run(path, dataset_name):
     print("Device:{}".format(device))    
     # load model
     checkpoint = torch.load(path)
-    model = get_model( checkpoint['model_name'],checkpoint['num_classes'],model_type=FLAGS.modality)
+    model = aux.get_model( checkpoint['model_name'],checkpoint['num_classes'],model_type=FLAGS.modality)
     model.load_state_dict(checkpoint['model_state_dict'])
     model = model.to(device)
     model.eval()

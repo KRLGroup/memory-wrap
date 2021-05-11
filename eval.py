@@ -4,7 +4,7 @@ import torch # type: ignore
 import numpy as np
 import random
 import datasets
-from aux import get_model,eval_memory,eval_std
+import aux
 
 # user flags
 absl.flags.DEFINE_string("path_model", None, "Path of the trained model")
@@ -33,7 +33,7 @@ def run_evaluation(path, dataset_name):
     # load model
     checkpoint = torch.load(path)
     model_name = checkpoint['model_name']
-    model = get_model(model_name,checkpoint['num_classes'],model_type=FLAGS.modality)
+    model = aux.get_model(model_name,checkpoint['num_classes'],model_type=FLAGS.modality)
     model.load_state_dict(checkpoint['model_state_dict'])
     model = model.to(device)
 
@@ -47,12 +47,12 @@ def run_evaluation(path, dataset_name):
     # perform validation
     loss_criterion = torch.nn.CrossEntropyLoss()
     if FLAGS.modality == 'std':
-        best_acc, best_loss = eval_std(model,test_loader,loss_criterion,device)
+        best_acc, best_loss = aux.eval_std(model,test_loader,loss_criterion,device)
         print("Best Loss:{:.4f} | Accuracy {:.2f} ".format(best_loss,best_acc))
     else:
         cum_acc =  []
         for _ in range(10):
-            best_acc, best_loss = eval_memory(model,test_loader,mem_loader,loss_criterion,device)
+            best_acc, best_loss = aux.eval_memory(model,test_loader,mem_loader,loss_criterion,device)
             cum_acc.append(best_acc)
         best_acc = np.mean(cum_acc)
         print("Best Loss:{:.4f} | Accuracy {:.2f}".format(best_loss,best_acc))
