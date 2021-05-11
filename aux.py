@@ -3,9 +3,25 @@ import torch # type: ignore
 from architectures import resnet
 from architectures import mobilenet
 from architectures import efficientnet
-
 import statistics
+import numpy as np
+import random
+import os 
+
+def set_seed(seed):
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False # set to false for reproducibility, True to boost performance
+    torch.manual_seed(seed)
+    np.random.seed(seed)
+    torch.cuda.manual_seed(seed)
+    random.seed(seed)
+    random_state = random.getstate()
+    os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
+    return random_state
+
 def get_model(model_name, num_classes, model_type='memory'):
+    if model_type not in ['memory','encoder_memory','std']:
+        raise ValueError(f'modality (model type) must be one of [\'memory\',\'encoder_memory\',\'std\'], not {model_type}.')
     if model_name == 'efficientnet':
         if model_type=='memory':
             model = efficientnet.MemoryEfficientNetB0(num_classes)
@@ -29,8 +45,7 @@ def get_model(model_name, num_classes, model_type='memory'):
         else:
             model = mobilenet.MobileNetV2(num_classes)
     else:
-        print("Error: input model name is not valid!")
-        exit()
+        raise ValueError("Error: input model name is not valid!")
 
    
     return model

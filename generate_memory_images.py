@@ -16,13 +16,7 @@ absl.flags.DEFINE_integer("batch_size_test", 3, "Number of samples for each imag
 absl.flags.mark_flag_as_required("path_model")
 
 FLAGS = absl.flags.FLAGS
-torch.backends.cudnn.deterministic = True
-torch.backends.cudnn.benchmark = False # set to false for reproducibility, True to boost performance
-seed = 0
-np.random.seed(seed)
-torch.manual_seed(seed)
-torch.cuda.manual_seed(seed)
-random.seed(seed)
+
 
 
 def run(path):

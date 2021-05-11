@@ -1,7 +1,5 @@
 
 import torch # type: ignore
-import numpy as np
-import random
 import absl.flags
 import absl.app
 import os
@@ -15,17 +13,6 @@ absl.flags.DEFINE_string("modality", None, "std, memory or encoder_memory")
 absl.flags.DEFINE_bool("continue_train", False, "restart the training process from last run")
 absl.flags.mark_flag_as_required("modality")
 FLAGS = absl.flags.FLAGS
-
-def set_seed(seed):
-    torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = False # set to false for reproducibility, True to boost performance
-    torch.manual_seed(seed)
-    np.random.seed(seed)
-    torch.cuda.manual_seed(seed)
-    random.seed(seed)
-    random_state = random.getstate()
-    os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
-    return random_state
 
 def train_memory_model(model,loaders,optimizer,scheduler, loss_criterion, num_epochs,device):
         
@@ -132,7 +119,7 @@ def run_experiment(config,modality):
        
     for run in range(initial_run,config['runs']):
         run_time = time.time()
-        set_seed(run)
+        aux.set_seed(run)
         torch.cuda.init()
         model = aux.get_model(config['model'],num_classes,model_type=modality)
         model = model.to(device)

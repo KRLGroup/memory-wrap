@@ -17,14 +17,6 @@ absl.flags.mark_flag_as_required("modality")
 
 FLAGS = absl.flags.FLAGS
 
-torch.backends.cudnn.deterministic = True
-torch.backends.cudnn.benchmark = False # set to false for reproducibility, True to boost performance
-seed = 0
-np.random.seed(seed)
-torch.manual_seed(seed)
-torch.cuda.manual_seed(seed)
-random.seed(seed)
-
 
 def run_evaluation(path, dataset_name):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")

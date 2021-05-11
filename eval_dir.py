@@ -1,7 +1,6 @@
 
 import torch # type: ignore
 import numpy as np
-import random
 import absl.flags
 import absl.app
 import os
@@ -14,16 +13,7 @@ absl.flags.DEFINE_string("path", None, "dir path where models are stored")
 absl.flags.mark_flag_as_required("path")
 FLAGS = absl.flags.FLAGS
 
-def set_seed(seed):
-    torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = False # set to false for reproducibility, True to boost performance
-    torch.manual_seed(seed)
-    np.random.seed(seed)
-    torch.cuda.manual_seed(seed)
-    random.seed(seed)
-    random_state = random.getstate()
-    os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
-    return random_state
+
 
 def major_voting_baseline(model,loader,mem_loader,loss_criterion,device):
     model.eval()
@@ -85,7 +75,7 @@ def eval_memory_model(model,loader,mem_loader,loss_criterion,device):
             aux_memory = aux_memory.to(device)
             y = y.to(device)
 
-            output,_  = model(data,memory)
+            output  = model(data,memory)
             loss = loss_criterion(output, target) 
             pred = output.data.max(1, keepdim=True)[1]
 
@@ -109,7 +99,7 @@ def run_experiment(path):
         # load model
         run,_ = name_model.split('.')
         run = int(run)-1
-        set_seed(run)
+        aux.set_seed(run)
         checkpoint = torch.load(path+name_model)
         #   load model
         modality = checkpoint['modality']
