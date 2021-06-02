@@ -1,21 +1,39 @@
 
 import torch # type: ignore
 import numpy as np
-import random
 import absl.flags
 import absl.app
 import os
 import datasets
 import aux
 import time
-
+from typing import Tuple
 # user flags
 absl.flags.DEFINE_string("path", None, "dir path where models are stored")
 absl.flags.mark_flag_as_required("path")
 FLAGS = absl.flags.FLAGS
 
 
-def major_voting_baseline(model,loader,mem_loader,loss_criterion,device):
+def major_voting_baseline(model:torch.nn.Module,loader:torch.utils.data.DataLoader,mem_loader:torch.utils.data.DataLoader,loss_criterion:torch.nn.modules.loss,device:torch.device)-> Tuple[float, float,float]:
+    """ Method to generate the major voting baseline of a pytorch model that has
+    a Memory Wrap variant as last layer. The model takes an image and a memory
+    samples as input and return the logits.
+
+    Args:
+        model (torch.nn.Module): Trained model to evaluate
+        loader (torch.utils.data.DataLoader): loader containing testing
+            samples where evaluate the model
+        mem_loader (torch.utils.data.DataLoader): loader containing training
+            samples to be used as memory set
+        loss_criterion (torch.nn.modules.loss): loss to use to evaluate the
+            error
+        device (torch.device): device where the model is stored
+
+    Returns:
+        Tuple[float, float,float]: Accuracy of Memory Wrap, accuracy of major
+        voting algorithm using the predictions, accuracy of major voting
+        algorithm using the targets
+    """
     model.eval()
     test_loss = 0.0
     correct = 0
@@ -61,7 +79,13 @@ def major_voting_baseline(model,loader,mem_loader,loss_criterion,device):
     return test_accuracy,  mvo_accuracy, mvy_accuracy
     
 
-def run_experiment(path):
+def run_experiment(path:str):
+    """ Function to evaluate the major voting baseline in a set of models inside
+    a dir. It prints mean and standard deviation.
+
+    Args:
+        path (str): dir path
+    """
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Device:{}".format(device))
     loss_criterion = torch.nn.CrossEntropyLoss()
