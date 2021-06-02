@@ -1,417 +1,254 @@
-# from https://github.com/codyaustun/pytorch-resnet/blob/master/resnet/cifar10/models/resnet.py
+'''ResNet in PyTorch.
 
-import math
-from functools import partial
+For Pre-activation ResNet, see 'preact_resnet.py'.
 
+Reference:
+[1] Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun
+    Deep Residual Learning for Image Recognition. arXiv:1512.03385
+'''
 import torch
-from torch import nn
-from torch.nn import functional as F
+import torch.nn as nn
+import torch.nn.functional as F
 from architectures.memory import MemoryWrapLayer,EncoderMemoryWrapLayer
 
 
 class BasicBlock(nn.Module):
     expansion = 1
 
-    def __init__(self, inplanes, planes, stride=1):
-        super().__init__()
-        self.conv1 = nn.Conv2d(inplanes, planes, 3, stride=stride, padding=1,
-                               bias=False)
+    def __init__(self, in_planes, planes, stride=1):
+        super(BasicBlock, self).__init__()
+        self.conv1 = nn.Conv2d(
+            in_planes, planes, kernel_size=3, stride=stride, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(planes)
-
-        self.conv2 = nn.Conv2d(planes, planes, 3, padding=1, bias=False)
+        self.conv2 = nn.Conv2d(planes, planes, kernel_size=3,
+                               stride=1, padding=1, bias=False)
         self.bn2 = nn.BatchNorm2d(planes)
 
-        if stride != 1 or inplanes != (planes * self.expansion):
+        self.shortcut = nn.Sequential()
+        if stride != 1 or in_planes != self.expansion*planes:
             self.shortcut = nn.Sequential(
-                nn.Conv2d(inplanes, planes * self.expansion, 1, stride=stride,
-                          bias=False),
-                nn.BatchNorm2d(planes * self.expansion)
+                nn.Conv2d(in_planes, self.expansion*planes,
+                          kernel_size=1, stride=stride, bias=False),
+                nn.BatchNorm2d(self.expansion*planes)
             )
-        else:
-            self.shortcut = nn.Sequential()
-    
-    def forward(self, inputs):
-        H = F.relu(self.bn1(self.conv1(inputs)))
 
-        H = self.bn2(self.conv2(H))
-
-        H += self.shortcut(inputs)
-        outputs = F.relu(H)
-
-        return outputs
-
+    def forward(self, x):
+        out = F.relu(self.bn1(self.conv1(x)))
+        out = self.bn2(self.conv2(out))
+        out += self.shortcut(x)
+        out = F.relu(out)
+        return out
 
 
 class Bottleneck(nn.Module):
     expansion = 4
 
-    def __init__(self, inplanes, planes, stride=1):
-        super().__init__()
-        self.conv1 = nn.Conv2d(inplanes, planes, 1, bias=False)
+    def __init__(self, in_planes, planes, stride=1):
+        super(Bottleneck, self).__init__()
+        self.conv1 = nn.Conv2d(in_planes, planes, kernel_size=1, bias=False)
         self.bn1 = nn.BatchNorm2d(planes)
-
-        self.conv2 = nn.Conv2d(planes, planes, 3, stride=stride,
-                               padding=1, bias=False)
+        self.conv2 = nn.Conv2d(planes, planes, kernel_size=3,
+                               stride=stride, padding=1, bias=False)
         self.bn2 = nn.BatchNorm2d(planes)
+        self.conv3 = nn.Conv2d(planes, self.expansion *
+                               planes, kernel_size=1, bias=False)
+        self.bn3 = nn.BatchNorm2d(self.expansion*planes)
 
-        self.conv3 = nn.Conv2d(planes, planes * 4, 1, bias=False)
-        self.bn3 = nn.BatchNorm2d(planes * 4)
-        if stride != 1 or inplanes != (planes * self.expansion):
+        self.shortcut = nn.Sequential()
+        if stride != 1 or in_planes != self.expansion*planes:
             self.shortcut = nn.Sequential(
-                nn.Conv2d(inplanes, planes * self.expansion, 1, stride=stride,
-                          bias=False),
-                nn.BatchNorm2d(planes * self.expansion)
+                nn.Conv2d(in_planes, self.expansion*planes,
+                          kernel_size=1, stride=stride, bias=False),
+                nn.BatchNorm2d(self.expansion*planes)
             )
-        else:
-            self.shortcut = nn.Sequential()
 
-    def forward(self, inputs):
-        H = F.relu(self.bn1(self.conv1(inputs)))
-
-        H = F.relu(self.bn2(self.conv2(H)))
-
-        H = self.bn3(self.conv3(H))
-
-        H += self.shortcut(inputs)
-        outputs = F.relu(H)
-
-        return outputs
+    def forward(self, x):
+        out = F.relu(self.bn1(self.conv1(x)))
+        out = F.relu(self.bn2(self.conv2(out)))
+        out = self.bn3(self.conv3(out))
+        out += self.shortcut(x)
+        out = F.relu(out)
+        return out
 
 
 class ResNet(nn.Module):
+    def __init__(self, block, num_blocks, num_classes=10,initialize=True):
+        super(ResNet, self).__init__()
+        self.in_planes = 64
 
-    def __init__(self, Block, layers, filters, num_classes=10, inplanes=None):
-        self.inplanes = inplanes or filters[0]
-        super().__init__()
+        self.conv1 = nn.Conv2d(3, 64, kernel_size=3,
+                               stride=1, padding=1, bias=False)
+        self.bn1 = nn.BatchNorm2d(64)
+        self.layer1 = self._make_layer(block, 64, num_blocks[0], stride=1)
+        self.layer2 = self._make_layer(block, 128, num_blocks[1], stride=2)
+        self.layer3 = self._make_layer(block, 256, num_blocks[2], stride=2)
+        self.layer4 = self._make_layer(block, 512, num_blocks[3], stride=2)
+        self.linear = nn.Linear(512*block.expansion, num_classes)
+        if initialize:
+            import math
+            for m in self.modules():
+                if isinstance(m, nn.Conv2d):
+                    n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
+                    m.weight.data.normal_(0, math.sqrt(2. / n))
+                elif isinstance(m, nn.BatchNorm2d):
+                    m.weight.data.fill_(1)
+                    m.bias.data.zero_()
+    def _make_layer(self, block, planes, num_blocks, stride):
+        strides = [stride] + [1]*(num_blocks-1)
+        layers = []
+        for stride in strides:
+            layers.append(block(self.in_planes, planes, stride))
+            self.in_planes = planes * block.expansion
+        return nn.Sequential(*layers)
 
-        self.pre_act = 'Pre' in Block.__name__
+    def forward(self, x):
+        out = F.relu(self.bn1(self.conv1(x)))
+        out = self.layer1(out)
+        out = self.layer2(out)
+        out = self.layer3(out)
+        out = self.layer4(out)
+        out = F.avg_pool2d(out, 4)
+        out = out.view(out.size(0), -1)
+        out = self.linear(out)
+        return out
 
-        self.conv1 = nn.Conv2d(3, self.inplanes, 3, padding=1, bias=False)
-        if not self.pre_act:
-            self.bn1 = nn.BatchNorm2d(self.inplanes)
-
-        self.num_sections = len(layers)
-        for section_index, (size, planes) in enumerate(zip(layers, filters)):
-            section = []
-            for layer_index in range(size):
-                if section_index != 0 and layer_index == 0:
-                    stride = 2
-                else:
-                    stride = 1
-                section.append(Block(self.inplanes, planes, stride=stride))
-                self.inplanes = planes * Block.expansion
-            section = nn.Sequential(*section)
-            setattr(self, f'section_{section_index}', section)
-        if self.pre_act:
-            self.bn1 = nn.BatchNorm2d(self.inplanes)
-
-        self.linear = nn.Linear(filters[-1] * Block.expansion, num_classes)
-
-        for m in self.modules():
-            if isinstance(m, nn.Conv2d):
-                n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
-                m.weight.data.normal_(0, math.sqrt(2. / n))
-            elif isinstance(m, nn.BatchNorm2d):
-                m.weight.data.fill_(1)
-                m.bias.data.zero_()
-
-    def forward(self, inputs):
-        H = self.conv1(inputs)
-        H = self.bn1(H)
-        H = F.relu(H)
-
-        for section_index in range(self.num_sections):
-            H = getattr(self, f'section_{section_index}')(H)
-
-        H = F.avg_pool2d(H, H.size()[2:])
-
-        H = H.view(H.size(0), -1)
-        outputs = self.linear(H)
-
-
-        return outputs
 
 class MemoryResNet(nn.Module):
+    def __init__(self, block, num_blocks, num_classes=10,initialize=True):
+        super(MemoryResNet, self).__init__()
+        self.in_planes = 64
 
-    def __init__(self, Block, layers, filters, num_classes=10, inplanes=None):
-        self.inplanes = inplanes or filters[0]
-        super().__init__()
+        self.conv1 = nn.Conv2d(3, 64, kernel_size=3,
+                               stride=1, padding=1, bias=False)
+        self.bn1 = nn.BatchNorm2d(64)
+        self.layer1 = self._make_layer(block, 64, num_blocks[0], stride=1)
+        self.layer2 = self._make_layer(block, 128, num_blocks[1], stride=2)
+        self.layer3 = self._make_layer(block, 256, num_blocks[2], stride=2)
+        self.layer4 = self._make_layer(block, 512, num_blocks[3], stride=2)
+        self.mw = MemoryWrapLayer(512*block.expansion, num_classes)
+        if initialize:
+            import math
+            for m in self.modules():
+                if isinstance(m, nn.Conv2d):
+                    n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
+                    m.weight.data.normal_(0, math.sqrt(2. / n))
+                elif isinstance(m, nn.BatchNorm2d):
+                    m.weight.data.fill_(1)
+                    m.bias.data.zero_()
+    def _make_layer(self, block, planes, num_blocks, stride):
+        strides = [stride] + [1]*(num_blocks-1)
+        layers = []
+        for stride in strides:
+            layers.append(block(self.in_planes, planes, stride))
+            self.in_planes = planes * block.expansion
+        return nn.Sequential(*layers)
 
-        self.pre_act = 'Pre' in Block.__name__
+    def forward_encoder(self, x):
+        out = F.relu(self.bn1(self.conv1(x)))
+        out = self.layer1(out)
+        out = self.layer2(out)
+        out = self.layer3(out)
+        out = self.layer4(out)
+        out = F.avg_pool2d(out, 4)
+        out = out.view(out.size(0), -1)
+        return out
 
-        self.conv1 = nn.Conv2d(3, self.inplanes, 3, padding=1, bias=False)
-        if not self.pre_act:
-            self.bn1 = nn.BatchNorm2d(self.inplanes)
+    def forward(self, x, ss, return_weights=False):
 
-        self.num_sections = len(layers)
-        for section_index, (size, planes) in enumerate(zip(layers, filters)):
-            section = []
-            for layer_index in range(size):
-                if section_index != 0 and layer_index == 0:
-                    stride = 2
-                else:
-                    stride = 1
-                section.append(Block(self.inplanes, planes, stride=stride))
-                self.inplanes = planes * Block.expansion
-            section = nn.Sequential(*section)
-            setattr(self, f'section_{section_index}', section)
-        if self.pre_act:
-            self.bn1 = nn.BatchNorm2d(self.inplanes)
-
-        #self.linear = nn.Linear(filters[-1] * Block.expansion, num_classes)
-        
-        self.mw = MemoryWrapLayer(filters[-1] * Block.expansion,num_classes)
-        for m in self.modules():
-            if isinstance(m, nn.Conv2d):
-                n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
-                m.weight.data.normal_(0, math.sqrt(2. / n))
-            elif isinstance(m, nn.BatchNorm2d):
-                m.weight.data.fill_(1)
-                m.bias.data.zero_()
-
-    def forward_encoder(self, inputs):
-        H = self.conv1(inputs)
-        H = self.bn1(H)
-        H = F.relu(H)
-
-        for section_index in range(self.num_sections):
-            H = getattr(self, f'section_{section_index}')(H)
-
-        H = F.avg_pool2d(H, H.size()[2:])
-
-        H = H.view(H.size(0), -1)
-        #outputs = self.linear(H)
-        return H
-    
-    def forward(self, x, ss,return_weights=False):
-
-        #input
+        # input
         out = self.forward_encoder(x)
         out_ss = self.forward_encoder(ss)
 
         # prediction
-        out_mw = self.mw(out,out_ss,return_weights)
+        out_mw = self.mw(out, out_ss, return_weights)
         return out_mw
 
-
 class EncoderMemoryResNet(MemoryResNet):
+    def __init__(self, block, num_blocks, num_classes=10,initialize=True):
+        super(MemoryResNet, self).__init__()
+        self.in_planes = 64
 
-     def __init__(self, Block, layers, filters, num_classes=10, inplanes=None):
-        self.inplanes = inplanes or filters[0]
-        super(MemoryResNet,self).__init__()
-        self.conv1 = nn.Conv2d(3, self.inplanes, 3, padding=1, bias=False)
-        self.bn1 = nn.BatchNorm2d(self.inplanes)
+        self.conv1 = nn.Conv2d(3, 64, kernel_size=3,
+                               stride=1, padding=1, bias=False)
+        self.bn1 = nn.BatchNorm2d(64)
+        self.layer1 = self._make_layer(block, 64, num_blocks[0], stride=1)
+        self.layer2 = self._make_layer(block, 128, num_blocks[1], stride=2)
+        self.layer3 = self._make_layer(block, 256, num_blocks[2], stride=2)
+        self.layer4 = self._make_layer(block, 512, num_blocks[3], stride=2)
+        self.mw = EncoderMemoryWrapLayer(512*block.expansion, num_classes)
+        if initialize:
+            import math
+            for m in self.modules():
+                if isinstance(m, nn.Conv2d):
+                    n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
+                    m.weight.data.normal_(0, math.sqrt(2. / n))
+                if isinstance(m, nn.BatchNorm2d):
+                     m.weight.data.fill_(1)
+                     m.bias.data.zero_()
 
-        self.num_sections = len(layers)
-        for section_index, (size, planes) in enumerate(zip(layers, filters)):
-            section = []
-            for layer_index in range(size):
-                if section_index != 0 and layer_index == 0:
-                    stride = 2
-                else:
-                    stride = 1
-                section.append(Block(self.inplanes, planes, stride=stride))
-                self.inplanes = planes * Block.expansion
-            section = nn.Sequential(*section)
-            setattr(self, f'section_{section_index}', section)
+    
 
-        #self.linear = nn.Linear(filters[-1] * Block.expansion, num_classes)
-        
-        self.mw = EncoderMemoryWrapLayer(filters[-1] * Block.expansion,num_classes)
-        for m in self.modules():
-            if isinstance(m, nn.Conv2d):
-                n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
-                m.weight.data.normal_(0, math.sqrt(2. / n))
-            elif isinstance(m, nn.BatchNorm2d):
-                m.weight.data.fill_(1)
-                m.bias.data.zero_()
+def ResNet18():
+    return ResNet(BasicBlock, [2, 2, 2, 2])
 
-# From "Deep Residual Learning for Image Recognition"
-def ResNet20(num_classes=10):
-    return ResNet(BasicBlock, layers=[3] * 3, filters=[16, 32, 64],
-                  num_classes=num_classes)
 
+def ResNet34():
+    return ResNet(BasicBlock, [3, 4, 6, 3])
 
-def ResNet32(num_classes=10):
-    return ResNet(BasicBlock, layers=[5] * 3, filters=[16, 32, 64],
-                  num_classes=num_classes)
 
+def ResNet50():
+    return ResNet(Bottleneck, [3, 4, 6, 3])
 
-def ResNet44(num_classes=10):
-    return ResNet(BasicBlock, layers=[7] * 3, filters=[16, 32, 64],
-                  num_classes=num_classes)
 
+def ResNet101():
+    return ResNet(Bottleneck, [3, 4, 23, 3])
 
-def ResNet56(num_classes=10):
-    return ResNet(BasicBlock, layers=[9] * 3, filters=[16, 32, 64],
-                  num_classes=num_classes)
 
+def ResNet152():
+    return ResNet(Bottleneck, [3, 8, 36, 3])
 
-def ResNet110(num_classes=10):
-    return ResNet(BasicBlock, layers=[18] * 3, filters=[16, 32, 64],
-                  num_classes=num_classes)
 
+def MemoryResNet18():
+    return MemoryResNet(BasicBlock, [2, 2, 2, 2])
 
-def ResNet1202(num_classes=10):
-    return ResNet(BasicBlock, layers=[200] * 3, filters=[16, 32, 64],
-                  num_classes=num_classes)
 
+def MemoryResNet34():
+    return MemoryResNet(BasicBlock, [3, 4, 6, 3])
 
 
-# From "Deep Networks with Stochastic Depth" for SVHN Experiments
-def ResNet152SVHN(num_classes=10):
-    return ResNet(BasicBlock, layers=[25] * 3, filters=[16, 32, 64],
-                  num_classes=num_classes)
+def MemoryResNet50():
+    return MemoryResNet(Bottleneck, [3, 4, 6, 3])
 
-# From kunagliu/pytorch
-def ResNet18(num_classes=10):
-    return ResNet(BasicBlock, layers=[2, 2, 2, 2], filters=[64, 128, 256, 512],
-                  num_classes=num_classes)
 
+def MemoryResNet101():
+    return MemoryResNet(Bottleneck, [3, 4, 23, 3])
 
-def ResNet34(num_classes=10):
-    return ResNet(BasicBlock, layers=[3, 4, 6, 3], filters=[64, 128, 256, 512],
-                  num_classes=num_classes)
 
+def MemoryResNet152():
+    return MemoryResNet(Bottleneck, [3, 8, 36, 3])
 
-def ResNet50(num_classes=10):
-    return ResNet(Bottleneck, layers=[3, 4, 6, 3], filters=[64, 128, 256, 512],
-                  num_classes=num_classes)
+def EncoderMemoryResNet18():
+    return EncoderMemoryResNet(BasicBlock, [2, 2, 2, 2])
 
 
-def ResNet101(num_classes=10):
-    return ResNet(Bottleneck,
-                  layers=[3, 4, 23, 3], filters=[64, 128, 256, 512],
-                  num_classes=num_classes)
+def EncoderMemoryResNet34():
+    return EncoderMemoryResNet(BasicBlock, [3, 4, 6, 3])
 
 
-def ResNet152(num_classes=10):
-    return ResNet(Bottleneck,
-                  layers=[3, 8, 36, 3], filters=[64, 128, 256, 512],
-                  num_classes=num_classes)
+def EncoderMemoryResNet50():
+    return EncoderMemoryResNet(Bottleneck, [3, 4, 6, 3])
 
-# From "Deep Residual Learning for Image Recognition"
-def MemoryResNet20(num_classes=10):
-    return MemoryResNet(BasicBlock, layers=[3] * 3, filters=[16, 32, 64],
-                  num_classes=num_classes)
 
+def EncoderMemoryResNet101():
+    return EncoderMemoryResNet(Bottleneck, [3, 4, 23, 3])
 
-def MemoryResNet32(num_classes=10):
-    return MemoryResNet(BasicBlock, layers=[5] * 3, filters=[16, 32, 64],
-                  num_classes=num_classes)
 
+def EncoderMemoryResNet152():
+    return EncoderMemoryResNet(Bottleneck, [3, 8, 36, 3])
 
-def MemoryResNet44(num_classes=10):
-    return MemoryResNet(BasicBlock, layers=[7] * 3, filters=[16, 32, 64],
-                  num_classes=num_classes)
+def test():
+    net = ResNet18()
+    y = net(torch.randn(1, 3, 32, 32))
+    print(y.size())
 
-
-def MemoryResNet56(num_classes=10):
-    return MemoryResNet(BasicBlock, layers=[9] * 3, filters=[16, 32, 64],
-                  num_classes=num_classes)
-
-
-def MemoryResNet110(num_classes=10):
-    return MemoryResNet(BasicBlock, layers=[18] * 3, filters=[16, 32, 64],
-                  num_classes=num_classes)
-
-
-def MemoryResNet1202(num_classes=10):
-    return MemoryResNet(BasicBlock, layers=[200] * 3, filters=[16, 32, 64],
-                  num_classes=num_classes)
-
-
-
-# From "Deep Networks with Stochastic Depth" for SVHN Experiments
-def MemoryResNet152SVHN(num_classes=10):
-    return MemoryResNet(BasicBlock, layers=[25] * 3, filters=[16, 32, 64],
-                  num_classes=num_classes)
-
-# From kunagliu/pytorch
-def MemoryResNet18(num_classes=10):
-    return MemoryResNet(BasicBlock, layers=[2, 2, 2, 2], filters=[64, 128, 256, 512],
-                  num_classes=num_classes)
-
-def MemoryResNet34(num_classes=10):
-    return MemoryResNet(BasicBlock, layers=[3, 4, 6, 3], filters=[64, 128, 256, 512],
-                  num_classes=num_classes)
-
-
-def MemoryResNet50(num_classes=10):
-    return MemoryResNet(Bottleneck, layers=[3, 4, 6, 3], filters=[64, 128, 256, 512],
-                  num_classes=num_classes)
-
-
-def MemoryResNet101(num_classes=10):
-    return MemoryResNet(Bottleneck,
-                  layers=[3, 4, 23, 3], filters=[64, 128, 256, 512],
-                  num_classes=num_classes)
-
-
-def MemoryResNet152(num_classes=10):
-    return MemoryResNet(Bottleneck,
-                  layers=[3, 8, 36, 3], filters=[64, 128, 256, 512])
-
-
-# From "Deep Residual Learning for Image Recognition"
-def EncoderMemoryResNet20(num_classes=10):
-    return EncoderMemoryResNet(BasicBlock, layers=[3] * 3, filters=[16, 32, 64],
-                  num_classes=num_classes)
-
-
-def EncoderMemoryResNet32(num_classes=10):
-    return EncoderMemoryResNet(BasicBlock, layers=[5] * 3, filters=[16, 32, 64],
-                  num_classes=num_classes)
-
-
-def EncoderMemoryResNet44(num_classes=10):
-    return EncoderMemoryResNet(BasicBlock, layers=[7] * 3, filters=[16, 32, 64],
-                  num_classes=num_classes)
-
-
-def EncoderMemoryResNet56(num_classes=10):
-    return EncoderMemoryResNet(BasicBlock, layers=[9] * 3, filters=[16, 32, 64],
-                  num_classes=num_classes)
-
-
-def EncoderMemoryResNet110(num_classes=10):
-    return EncoderMemoryResNet(BasicBlock, layers=[18] * 3, filters=[16, 32, 64],
-                  num_classes=num_classes)
-
-
-def EncoderMemoryResNet1202(num_classes=10):
-    return EncoderMemoryResNet(BasicBlock, layers=[200] * 3, filters=[16, 32, 64],
-                  num_classes=num_classes)
-
-
-
-# From "Deep Networks with Stochastic Depth" for SVHN Experiments
-def EncoderMemoryResNet152SVHN(num_classes=10):
-    return EncoderMemoryResNet(BasicBlock, layers=[25] * 3, filters=[16, 32, 64],
-                  num_classes=num_classes)
-
-# From kunagliu/pytorch
-def EncoderMemoryResNet18(num_classes=10):
-    return EncoderMemoryResNet(BasicBlock, layers=[2, 2, 2, 2], filters=[64, 128, 256, 512],
-                  num_classes=num_classes)
-
-def EncoderMemoryResNet34(num_classes=10):
-    return EncoderMemoryResNet(BasicBlock, layers=[3, 4, 6, 3], filters=[64, 128, 256, 512],
-                  num_classes=num_classes)
-
-
-def EncoderMemoryResNet50(num_classes=10):
-    return EncoderMemoryResNet(Bottleneck, layers=[3, 4, 6, 3], filters=[64, 128, 256, 512],
-                  num_classes=num_classes)
-
-
-def EncoderMemoryResNet101(num_classes=10):
-    return EncoderMemoryResNet(Bottleneck,
-                  layers=[3, 4, 23, 3], filters=[64, 128, 256, 512],
-                  num_classes=num_classes)
-
-
-def EncoderMemoryResNet152(num_classes=10):
-    return EncoderMemoryResNet(Bottleneck,
-                  layers=[3, 8, 36, 3], filters=[64, 128, 256, 512],
-                  num_classes=num_classes)
+# test()
