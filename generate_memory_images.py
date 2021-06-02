@@ -2,7 +2,6 @@ import os
 import torch # type: ignore
 import torchvision # type: ignore
 import numpy as np
-import random
 import matplotlib.pyplot as plt # type: ignore
 import absl.flags
 import absl.app
@@ -19,7 +18,14 @@ FLAGS = absl.flags.FLAGS
 
 
 
-def run(path):
+def run(path:str):
+    """ Function to generate memory images for testing images using a given
+    model. Memory images show the samples in the memory set that have an
+    impact on the current prediction.
+
+    Args:
+        path (str): model path
+    """
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Device:{}".format(device))    
     # load model
@@ -36,7 +42,7 @@ def run(path):
 
     # load data
     train_examples = checkpoint['train_examples']
-    if dataset_name == 'CIFAR10':
+    if dataset_name == 'CIFAR10' or dataset_name == 'CINIC10':
         name_classes= ['airplane','automobile',	'bird',	'cat','deer','dog',	'frog'	,'horse','ship','truck']
     else:
         name_classes = range(checkpoint['num_classes'])

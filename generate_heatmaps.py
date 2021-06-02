@@ -1,6 +1,5 @@
 import torch # type: ignore
 import numpy as np
-import random
 import absl.flags
 import absl.app
 import os
@@ -17,16 +16,6 @@ absl.flags.DEFINE_string("path_model", None, "Path of the trained model")
 absl.flags.mark_flag_as_required("path_model")
 
 FLAGS = absl.flags.FLAGS
-
-torch.backends.cudnn.deterministic = True
-torch.backends.cudnn.benchmark = False # set to false for reproducibility, True to boost performance
-seed = 0
-np.random.seed(seed)
-torch.manual_seed(seed)
-torch.cuda.manual_seed(seed)
-random.seed(seed)
-
-
 
 
 def visualize_image_mult_attr(
@@ -152,7 +141,12 @@ def visualize_image_mult_attr(
     return plt_fig, plt_axis
 
 
-def run(path):
+def run(path:str):
+    """ Function to generate heatmaps for testing images using a given model.
+
+    Args:
+        path (str): model path
+    """
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Device:{}".format(device))
     batch_size_test=1
@@ -172,7 +166,7 @@ def run(path):
 
     # load data
     train_examples = checkpoint['train_examples']
-    if dataset_name == 'CIFAR10':
+    if dataset_name == 'CIFAR10' or dataset_name == 'CINIC10':
         name_classes= ['airplane','automobile',	'bird',	'cat','deer','dog',	'frog'	,'horse','ship','truck']
     else:
         name_classes = range(checkpoint['num_classes'])
