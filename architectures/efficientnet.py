@@ -198,7 +198,6 @@ class MemoryEfficientNet(nn.Module):
         if self.training and dropout_rate > 0:
             out = F.dropout(out, p=dropout_rate)
         return out
-        return out_mw
 
     def forward(self, x, ss, return_weights=False):
 
