@@ -1,25 +1,40 @@
 import datasets
 import torch # type: ignore
 import numpy as np
-import random
 import absl.flags
 import absl.app
 import os
 import aux
+from typing import Tuple
 
 # user flags
 absl.flags.DEFINE_string("path_models", None, "Path of the trained model")
-absl.flags.DEFINE_string("dataset", None, "Dataset to test (SVHN, CIFAR10)")
-absl.flags.DEFINE_string("modality", None, "std, memory or encoder_memory")
 
-absl.flags.mark_flag_as_required("dataset")
 absl.flags.mark_flag_as_required("path_models")
-absl.flags.mark_flag_as_required("modality")
 
 FLAGS = absl.flags.FLAGS
 
 
-def eval_memory(model,loader,mem_loader,device):
+def get_explanation_accuracy(model:torch.nn.Module,loader:torch.utils.data.DataLoader,mem_loader:torch.utils.data.DataLoader,device:torch.device)-> Tuple[float, float, float]:
+    """ Method to compute the explanation accuracy for different settings, as
+    described in the paper. Explanation accuracy checks how many times the
+    sample in the memory set with the highest weight is predicted in the same
+    class of the current sample.
+image
+
+    Args:
+        model (torch.nn.Module): Trained model to evaluate
+        loader (torch.utils.data.DataLoader): loader containing testing
+            samples where evaluate the model
+        mem_loader (torch.utils.data.DataLoader): loader containing training
+            samples to be used as memory set
+        device (torch.device): device where the model is stored
+
+    Returns:
+        Tuple[float, float, float]: Explanation accuracy for the sample with
+        the highest weight in memory, explanation accuracy for the sample with
+        the highest weight in memory when it is a counterfactual, explanation accuracy for the sample with the highest weight in memory when it is an explanation by example.
+    """
     model.eval()
     expl_max = 0
 
@@ -29,7 +44,7 @@ def eval_memory(model,loader,mem_loader,device):
     correct_example = 0
 
     with torch.no_grad():
-        for _, (data, target) in enumerate(loader):
+        for index_batch, (data, target) in enumerate(loader):
             data = data.to(device)
             target = target.to(device)
             memory, _ = next(iter(mem_loader))
@@ -59,22 +74,25 @@ def eval_memory(model,loader,mem_loader,device):
                     # explanation by example
                     correct_example += pred[row].eq(target[row].data.view_as(pred[row])).sum().item()
                     top_example+=1
-
             # explanation accuracy
             expl_max += pred.eq(exp_pred[index_max].data.view_as(pred)).sum().item()
-
+            print("batch:{}\{}".format(index_batch,len(loader)),end='\r')
         counter_accuracy = 100.*(torch.true_divide(correct_counter,top_counter))
         example_accuracy = 100.*(torch.true_divide(correct_example,top_example))
         explanation_accuracy = 100.*(torch.true_divide(expl_max,len(loader.dataset)))
 
     return explanation_accuracy, counter_accuracy, example_accuracy
 
-def run_evaluation(path, dataset_name):
+def run_evaluation(path:str):
+    """ Function to print the explanation accuracy of a set of models inside a dir.  It prints the mean and standard deviation of explanation accuracy of the top sample in memory on different settings (see paper).
+
+    Args:
+        path (str): dir path
+    """
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Device:{}".format(device))
     
     # load data   
-    load_dataset = getattr(datasets, 'get_'+dataset_name)
 
     # load model
     expl_acc = []
@@ -86,7 +104,11 @@ def run_evaluation(path, dataset_name):
         # load model
         checkpoint = torch.load(path+name_model)
         model_name = checkpoint['model_name']
-        model = aux.get_model(model_name,checkpoint['num_classes'],model_type=FLAGS.modality)
+        modality = checkpoint['modality']
+        dataset_name = checkpoint['dataset_name']
+        load_dataset = getattr(datasets, 'get_'+dataset_name)
+
+        model = aux.get_model(model_name,checkpoint['num_classes'],model_type=modality)
         model.load_state_dict(checkpoint['model_state_dict'])
         model = model.to(device)
 
@@ -99,8 +121,8 @@ def run_evaluation(path, dataset_name):
         cum_acc =  []
         cum_acc_counter = []
         cum_acc_ex = []
-        for _ in range(10):
-            exp_max_acc, counter_acc,example_acc = eval_memory(model,test_loader,mem_loader,device)
+        for _ in range(5):
+            exp_max_acc, counter_acc,example_acc = get_explanation_accuracy(model,test_loader,mem_loader,device)
             cum_acc.append(exp_max_acc)
             cum_acc_counter.append(counter_acc)
             cum_acc_ex.append(example_acc)
@@ -120,7 +142,7 @@ def run_evaluation(path, dataset_name):
 
 def main(args):
 
-    run_evaluation(FLAGS.path_models,FLAGS.dataset)
+    run_evaluation(FLAGS.path_models)
 
 if __name__ == '__main__':
   absl.app.run(main)

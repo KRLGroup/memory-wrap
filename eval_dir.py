@@ -13,82 +13,15 @@ absl.flags.DEFINE_string("path", None, "dir path where models are stored")
 absl.flags.mark_flag_as_required("path")
 FLAGS = absl.flags.FLAGS
 
+   
 
+def run_experiment(path:str):
+    """ Function to evaluate a set of models inside a dir.
+    It prints mean and standard deviation.
 
-def major_voting_baseline(model,loader,mem_loader,loss_criterion,device):
-    model.eval()
-    test_loss = 0.0
-    correct = 0
-    correct_mvo = 0
-    correct_mvy = 0
-    with torch.no_grad():
-        for _, (data, target) in enumerate(loader):
-            data = data.to(device)
-            target = target.to(device)
-            memory, y = next(iter(mem_loader))
-            memory = memory.to(device)
-         
-            aux_memory, _ =  next(iter(mem_loader))
-            aux_memory = aux_memory.to(device)
-            y = y.to(device)
-
-            output,rw  = model(data,memory,return_weights=True)
-            loss = loss_criterion(output, target) 
-            pred = output.data.max(1, keepdim=True)[1]
-            # compute memory outputs
-            memory_outputs = model(memory,aux_memory)
-            _, memory_predictions = torch.max(memory_outputs, 1)
-            mem_val,memory_sorted_index = torch.sort(rw,descending=True)
-
-            for ind in range(len(data)):
-                # M_c u M_e : set of sample with a positive impact on prediction
-                m_ec = memory_sorted_index[ind][mem_val[ind]>0]
-                pred_mec = memory_predictions[m_ec]
-                y_mec = y[m_ec]
-                mv_output, _ = torch.mode(pred_mec)
-                mv_y, _ = torch.mode(y_mec)
-                
-                correct_mvo += mv_output.eq(target[ind].data.view_as(mv_output)).sum().item()
-                correct_mvy += mv_y.eq(target[ind].data.view_as(mv_y)).sum().item()
-            
-            correct += pred.eq(target.data.view_as(pred)).sum().item()
-            test_loss += loss.item()
-            
-        
-        test_accuracy = 100.*(torch.true_divide(correct,len(loader.dataset)))
-        mvo_accuracy = 100.*(torch.true_divide(correct_mvo,len(loader.dataset)))
-        mvy_accuracy = 100.*(torch.true_divide(correct_mvy,len(loader.dataset)))
-    return test_accuracy,  mvo_accuracy, mvy_accuracy
-
-def eval_memory_model(model,loader,mem_loader,loss_criterion,device):
-    model.eval()
-    test_loss = 0.0
-    correct = 0
-    with torch.no_grad():
-        for _, (data, target) in enumerate(loader):
-            data = data.to(device)
-            target = target.to(device)
-            memory, y = next(iter(mem_loader))
-            memory = memory.to(device)
-         
-            aux_memory, _ =  next(iter(mem_loader))
-            aux_memory = aux_memory.to(device)
-            y = y.to(device)
-
-            output  = model(data,memory)
-            loss = loss_criterion(output, target) 
-            pred = output.data.max(1, keepdim=True)[1]
-
-            
-            correct += pred.eq(target.data.view_as(pred)).sum().item()
-            test_loss += loss.item()
-            
-        
-        test_accuracy = 100.*(torch.true_divide(correct,len(loader.dataset)))
-    return test_accuracy
-    
-
-def run_experiment(path):
+    Args:
+        path (str): dir path
+    """
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Device:{}".format(device))
     loss_criterion = torch.nn.CrossEntropyLoss()
@@ -119,7 +52,7 @@ def run_experiment(path):
             cum_acc =  []
             init_eval_time = time.time()
             for _ in range(5):
-                test_acc = eval_memory_model(model,test_loader, mem_loader,loss_criterion,device)
+                test_acc, _ = aux.eval_memory(model,test_loader, mem_loader,loss_criterion,device)
                 cum_acc.append(test_acc)
             acc_mean = np.mean(cum_acc)
             end_eval_time = time.time()
