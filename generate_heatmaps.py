@@ -12,7 +12,7 @@ import captum.attr # type: ignore
 
 # user flags
 absl.flags.DEFINE_string("path_model", None, "Path of the trained model")
-
+absl.flags.DEFINE_string("dir_dataset", 'datasets/', "dir path where datasets are stored")
 absl.flags.mark_flag_as_required("path_model")
 
 FLAGS = absl.flags.FLAGS
@@ -141,11 +141,12 @@ def visualize_image_mult_attr(
     return plt_fig, plt_axis
 
 
-def run(path:str):
+def run(path:str,dataset_dir:str):
     """ Function to generate heatmaps for testing images using a given model.
 
     Args:
         path (str): model path
+        dataset_dir (str): dir where datasets are stored
     """
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Device:{}".format(device))
@@ -172,7 +173,7 @@ def run(path:str):
         name_classes = range(checkpoint['num_classes'])
     load_dataset = getattr(datasets, 'get_'+dataset_name)
     undo_normalization = getattr(datasets, 'undo_normalization_'+dataset_name)
-    _, _, test_loader, mem_loader = load_dataset('../datasets',batch_size_train=50, batch_size_test=batch_size_test,batch_size_memory=100,size_train=train_examples)
+    _, _, test_loader, mem_loader = load_dataset(dataset_dir,batch_size_train=50, batch_size_test=batch_size_test,batch_size_memory=100,size_train=train_examples)
     memory_iter = iter(mem_loader)
     def get_image(image, revert_norm=True):
         if revert_norm:
@@ -278,7 +279,7 @@ baselines=(baseline_input,baseline_memory), target=predictions[ind].item(), inte
 
 
 def main(args):
-    run(FLAGS.path_model)
+    run(FLAGS.path_model,FLAGS.dir_dataset)
 
 if __name__ == '__main__':
   absl.app.run(main)

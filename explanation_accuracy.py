@@ -9,7 +9,7 @@ from typing import Tuple
 
 # user flags
 absl.flags.DEFINE_string("path_models", None, "Path of the trained model")
-
+absl.flags.DEFINE_string("dir_dataset", 'datasets/', "dir path where datasets are stored")
 absl.flags.mark_flag_as_required("path_models")
 
 FLAGS = absl.flags.FLAGS
@@ -83,11 +83,12 @@ image
 
     return explanation_accuracy, counter_accuracy, example_accuracy
 
-def run_evaluation(path:str):
+def run_evaluation(path:str,dataset_dir:str):
     """ Function to print the explanation accuracy of a set of models inside a dir.  It prints the mean and standard deviation of explanation accuracy of the top sample in memory on different settings (see paper).
 
     Args:
         path (str): dir path
+        dataset_dir (str): dir where datasets are stored
     """
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Device:{}".format(device))
@@ -113,7 +114,7 @@ def run_evaluation(path:str):
         model = model.to(device)
 
         #load data
-        _, _, test_loader, mem_loader = load_dataset('../datasets',batch_size_train=checkpoint['train_examples'], batch_size_test=500,batch_size_memory=100)
+        _, _, test_loader, mem_loader = load_dataset(dataset_dir,batch_size_train=checkpoint['train_examples'], batch_size_test=500,batch_size_memory=100)
         print("Loaded models:{}/{}".format(indx+1,len(list_models),end='\r'))
 
 
@@ -142,7 +143,7 @@ def run_evaluation(path:str):
 
 def main(args):
 
-    run_evaluation(FLAGS.path_models)
+    run_evaluation(FLAGS.path_models,FLAGS.dir_dataset)
 
 if __name__ == '__main__':
   absl.app.run(main)

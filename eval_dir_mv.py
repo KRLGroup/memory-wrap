@@ -10,6 +10,7 @@ import time
 from typing import Tuple
 # user flags
 absl.flags.DEFINE_string("path", None, "dir path where models are stored")
+absl.flags.DEFINE_string("dir_dataset", 'datasets/', "dir path where datasets are stored")
 absl.flags.mark_flag_as_required("path")
 FLAGS = absl.flags.FLAGS
 
@@ -79,12 +80,13 @@ def major_voting_baseline(model:torch.nn.Module,loader:torch.utils.data.DataLoad
     return test_accuracy,  mvo_accuracy, mvy_accuracy
     
 
-def run_experiment(path:str):
+def run_experiment(path:str,dataset_dir:str):
     """ Function to evaluate the major voting baseline in a set of models inside
     a dir. It prints mean and standard deviation.
 
     Args:
         path (str): dir path
+        dataset_dir (str): dir where datasets are stored
     """
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Device:{}".format(device))
@@ -112,7 +114,7 @@ def run_experiment(path:str):
         mem_examples = checkpoint['mem_examples']
         train_examples = checkpoint['train_examples']
         load_dataset = getattr(datasets, 'get_'+checkpoint['dataset_name'])
-        _, _, test_loader, mem_loader = load_dataset('../datasets',batch_size_train=128, batch_size_test=500,batch_size_memory=mem_examples,size_train=train_examples,seed=run)
+        _, _, test_loader, mem_loader = load_dataset(dataset_dir,batch_size_train=128, batch_size_test=500,batch_size_memory=mem_examples,size_train=train_examples,seed=run)
 
         if modality == 'memory' or modality == 'encoder_memory':
             cum_acc =  []
@@ -150,7 +152,7 @@ def run_experiment(path:str):
 
 def main(argv=None):
 
-    run_experiment(FLAGS.path)
+    run_experiment(FLAGS.path,FLAGS.dir_dataset)
 
 if __name__ == '__main__':
   absl.app.run(main)

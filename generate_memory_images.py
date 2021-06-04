@@ -11,20 +11,21 @@ import aux
 # user flags
 absl.flags.DEFINE_string("path_model", None, "Path of the trained model")
 absl.flags.DEFINE_integer("batch_size_test", 3, "Number of samples for each image")
-
+absl.flags.DEFINE_string("dir_dataset", 'datasets/', "dir path where datasets are stored")
 absl.flags.mark_flag_as_required("path_model")
 
 FLAGS = absl.flags.FLAGS
 
 
 
-def run(path:str):
+def run(path:str,dataset_dir:str):
     """ Function to generate memory images for testing images using a given
     model. Memory images show the samples in the memory set that have an
     impact on the current prediction.
 
     Args:
         path (str): model path
+        dataset_dir (str): dir where datasets are stored
     """
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Device:{}".format(device))    
@@ -49,7 +50,7 @@ def run(path:str):
     load_dataset = getattr(datasets, 'get_'+dataset_name)
     undo_normalization = getattr(datasets, 'undo_normalization_'+dataset_name)
     batch_size_test = FLAGS.batch_size_test
-    _, _, test_loader, mem_loader = load_dataset('../datasets',batch_size_train=50, batch_size_test=batch_size_test,batch_size_memory=100,size_train=train_examples)
+    _, _, test_loader, mem_loader = load_dataset(dataset_dir,batch_size_train=50, batch_size_test=batch_size_test,batch_size_memory=100,size_train=train_examples)
     memory_iter = iter(mem_loader)
     
     #saving stuff
@@ -114,7 +115,7 @@ def run(path:str):
 
 def main(argv):
 
-    run(FLAGS.path_model)
+    run(FLAGS.path_model,FLAGS.dir_dataset)
 
 if __name__ == '__main__':
   absl.app.run(main)
