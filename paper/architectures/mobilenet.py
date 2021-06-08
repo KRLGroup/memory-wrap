@@ -1,7 +1,7 @@
 '''MobileNetV2 in PyTorch.
 
-See the paper "Inverted Residuals and Linear Bottlenecks:
-Mobile Networks for Classification, Detection and Segmentation" for more details.
+Reference:
+https://github.com/kuangliu/pytorch-cifar/blob/master/models/mobilenetv2.py
 '''
 import torch
 import torch.nn as nn

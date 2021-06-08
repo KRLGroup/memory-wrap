@@ -1,4 +1,9 @@
-'''DenseNet in PyTorch.'''
+'''DenseNet in PyTorch.
+
+Reference:
+https://github.com/kuangliu/pytorch-cifar/blob/master/models/densenet.py
+
+'''
 import math
 
 import torch
