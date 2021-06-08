@@ -4,7 +4,7 @@ from entmax import sparsemax
 
 _EPSILON = 1e-6
 
-def _vector_norms(v):
+def _vector_norms(v:torch.Tensor)->torch.Tensor:
     """ Computes the vector norms
     Args:
         v: The vector from which there must be calculated the norms
@@ -20,12 +20,13 @@ class MLP(nn.Module):
     '''
     Multi-layer perceptron class
     '''
-    def __init__(self, input_size, hidden_size, output_size):
+    def __init__(self, input_size:int, hidden_size:int, output_size:int):
         super(MLP, self).__init__()
         self.fc1 = torch.nn.Linear(input_size, hidden_size)
         self.relu = torch.nn.ReLU()
         self.fc2 = torch.nn.Linear(hidden_size, output_size)
-    def forward(self, x):
+
+    def forward(self, x:torch.Tensor):
         hidden = self.fc1(x)
         relu = self.relu(hidden)
         output = self.fc2(relu)
@@ -33,15 +34,14 @@ class MLP(nn.Module):
 
 class MemoryWrapLayer(nn.Module):
 
-    def __init__(self, encoder_output_dim, output_dim):
+    def __init__(self, encoder_output_dim:int, output_dim:int):
         super(MemoryWrapLayer, self).__init__()
 
         final_input_dim = encoder_output_dim*2 
-        # layers
         self.fc = MLP(final_input_dim,final_input_dim*2,output_dim)
 
         
-    def forward(self, encoder_output, memory_set, return_weights=False):
+    def forward(self, encoder_output:torch.Tensor, memory_set:torch.Tensor, return_weights:bool=False)->torch.Tensor:
         """Forward call of MemoryWrap.
         Args:
             input: A tensor of dimensions [b,dim] where dim is the dimension required by the encoder
@@ -70,15 +70,14 @@ class MemoryWrapLayer(nn.Module):
 
 class BaselineMemory(nn.Module):
 
-    def __init__(self, encoder_output_dim, output_dim):
+    def __init__(self, encoder_output_dim:int, output_dim:int):
         super(BaselineMemory, self).__init__()
 
         final_input_dim = encoder_output_dim
-        # layers
         self.fc = MLP(final_input_dim,final_input_dim*2,output_dim)
 
         
-    def forward(self, encoder_output, memory_set, return_weights=False):
+    def forward(self, encoder_output:torch.Tensor, memory_set:torch.Tensor, return_weights:bool=False)->torch.Tensor:
         """Forward call of MemoryWrap.
         Args:
             input: A tensor of dimensions [b,dim] where dim is the dimension required by the encoder
