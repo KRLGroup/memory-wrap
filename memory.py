@@ -20,25 +20,40 @@ class MLP(nn.Module):
     '''
     Multi-layer perceptron class
     '''
-    def __init__(self, input_size:int, hidden_size:int, output_size:int):
+    def __init__(self, input_size:int, hidden_size:int, output_size:int, activation:torch.nn.modules.activation=torch.nn.ReLU()):
+        """ Init function to initialize a multi-layer perceptron
+
+        Args:
+            input_size (int): Input's dimension
+            hidden_size (int): Number of units in the hidden layer
+            output_size (int): Number of output units
+            activation (torch.nn.modules.activation, optional): Activation function of the hidden layer. Defaults to torch.nn.ReLU().
+        """
         super(MLP, self).__init__()
         self.fc1 = torch.nn.Linear(input_size, hidden_size)
-        self.relu = torch.nn.ReLU()
+        self.activation = activation
         self.fc2 = torch.nn.Linear(hidden_size, output_size)
 
     def forward(self, x:torch.Tensor):
         hidden = self.fc1(x)
-        relu = self.relu(hidden)
+        relu = self.activation(hidden)
         output = self.fc2(relu)
         return output
 
 class MemoryWrapLayer(nn.Module):
 
-    def __init__(self, encoder_output_dim:int, output_dim:int):
+    def __init__(self, encoder_output_dim:int, output_dim:int, mlp_activation:torch.nn.modules.activation=torch.nn.ReLU()):
+        """ Initialize a Memory Wrap layer
+
+        Args:
+            encoder_output_dim (int): Dimensions of the last layer of the encoder
+            output_dim (int): Number of desired output units.
+            mlp_activation (torch.nn.modules.activation, optional): Activation function of the hidden layer in the multi-layer perceptron. Defaults to torch.nn.ReLU().
+        """
         super(MemoryWrapLayer, self).__init__()
 
         final_input_dim = encoder_output_dim*2 
-        self.fc = MLP(final_input_dim,final_input_dim*2,output_dim)
+        self.fc = MLP(final_input_dim,final_input_dim*2,output_dim,mlp_activation)
 
         
     def forward(self, encoder_output:torch.Tensor, memory_set:torch.Tensor, return_weights:bool=False)->torch.Tensor:
@@ -70,11 +85,18 @@ class MemoryWrapLayer(nn.Module):
 
 class BaselineMemory(nn.Module):
 
-    def __init__(self, encoder_output_dim:int, output_dim:int):
+    def __init__(self, encoder_output_dim:int, output_dim:int,mlp_activation:torch.nn.modules.activation=torch.nn.ReLU()):
+        """ Initialize the layer opf the baseline that uses only the memory set to compute the output
+
+        Args:
+            encoder_output_dim (int): Dimensions of the last layer of the encoder
+            output_dim (int): Number of desired output units.
+            mlp_activation (torch.nn.modules.activation, optional): Activation function of the hidden layer in the multi-layer perceptron. Defaults to torch.nn.ReLU().
+        """
         super(BaselineMemory, self).__init__()
 
         final_input_dim = encoder_output_dim
-        self.fc = MLP(final_input_dim,final_input_dim*2,output_dim)
+        self.fc = MLP(final_input_dim,final_input_dim*2,output_dim,mlp_activation)
 
         
     def forward(self, encoder_output:torch.Tensor, memory_set:torch.Tensor, return_weights:bool=False)->torch.Tensor:
