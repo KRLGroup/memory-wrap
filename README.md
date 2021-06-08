@@ -42,7 +42,7 @@ where *input_encoding* and *memory_encoding* are the outputs of the the encoder 
 
 
 # Jupyter Notebook
-This repository contains a jupyter noteebook named tutorial.ipynb that explains step by step the process of extending a deep neural netweork with Memory Wrap.
+You can find in the <a href="https://colab.research.google.com/drive/1OPjcpTH7X8EV1ev361iuhVzd2Jfp9kFA">following link </a> a jupyter noteebook that explains step by step the process of extending a deep neural network with Memory Wrap.
 
 # Paper Code
 To replicate paper results please consult the directory "paper" and the associated README.md. The directory contains all the scripts needed to download the datasets, run the scripts and replicate the results.
