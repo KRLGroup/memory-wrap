@@ -22,24 +22,23 @@ The library contains two main classes:
 ## Usage
 ### Instantiate the layer
 ```python
-memorywrap = MemoryWrapLayer(encoder_dim,output_dim,return_weights=False)
+memorywrap = MemoryWrapLayer(encoder_dim,output_dim,mlp_activation=torch.nn.ReLU())
 ```
 or
 ```python
-memorywrap = BaselineMemory(encoder_dim,output_dim)
+memorywrap = BaselineMemory(encoder_dim,output_dim,mlp_activation=torch.nn.ReLU())
 ```
 where:
 - *encoder_dim* is the output dimension of the last layer of the encoder 
 - *output_dim* is the desired output dimensione. In the case of the paper *output_dim* is equal to the **number of classes**;
-- *return_weights* is a flag telling to the layer if it has to return the sparse content weights.
+- *mlp_activation* is the activation that must be used in the hidden layer of the multi-layer perceptron. By default is the ReLU function.
 
 ### Forward call
 Add the forward call to your forward function.
 ```python
-output_memorywrap = memorywrap(input_encoding,memory_encoding)
+output_memorywrap = memorywrap(input_encoding,memory_encoding,return_weights=False)
 ```
-where *input_encoding* and *memory_encoding* are the outputs of the the encoder of rispectively the current input and the memory set. <br>
-If you have set the flag *return_weights* to True, then *output_memorywrap* is a Tuple where the first element is the output and the second one are the content weights associated to each element in the memory_encoding.
+where *input_encoding* and *memory_encoding* are the outputs of the the encoder of rispectively the current input and the memory set, and *return_weights* is a flag telling to the layer if it has to also return the sparse content weights. If you have set the flag *return_weights* to True, then *output_memorywrap* is a Tuple where the first element is the output and the second one are the content weights associated to each element in the memory_encoding.
 
 
 # Jupyter Notebook
