@@ -34,7 +34,15 @@ class MLP(nn.Module):
         self.activation = activation
         self.fc2 = torch.nn.Linear(hidden_size, output_size)
 
-    def forward(self, x:torch.Tensor):
+    def forward(self, x:torch.Tensor)->torch.Tensor:
+        """ Forward call of multi-layer perceptron
+
+        Args:
+            x (torch.Tensor): Input tensor
+
+        Returns:
+            torch.Tensor: the output of multi-layer perceptron.
+        """
         hidden = self.fc1(x)
         relu = self.activation(hidden)
         output = self.fc2(relu)
