@@ -6,7 +6,8 @@ https://github.com/kuangliu/pytorch-cifar/blob/master/models/googlenet.py
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from architectures.memory import MemoryWrapLayer,EncoderMemoryWrapLayer
+from memorywrap import MemoryWrapLayer as EncoderMemoryWrapLayer
+from memorywrap import BaselineMemory as MemoryWrapLayer
 
 
 class Inception(nn.Module):

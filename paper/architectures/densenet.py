@@ -9,7 +9,8 @@ import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from architectures.memory import MemoryWrapLayer,EncoderMemoryWrapLayer
+from memorywrap import MemoryWrapLayer as EncoderMemoryWrapLayer
+from memorywrap import BaselineMemory as MemoryWrapLayer
 
 
 class Bottleneck(nn.Module):
