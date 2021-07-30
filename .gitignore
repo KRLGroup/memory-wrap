@@ -1,6 +1,5 @@
 __pycache__/
 architectures/__pycache__/
-config/
 .pyc
 core
 *transfer*.py

@@ -1,0 +1,39 @@
+# 
+
+model: mobilenet # mobilenet, efficientnet, googlenet, shufflenet, densenet or resnet18
+save: False
+train_examples: 1000 # tested: [1000,2000,5000,100000]. The last one is the full dataset configuration
+runs: 15
+batch_size_train: 128
+batch_size_test: 500
+
+# optimizer config
+optimizer:
+  learning_rate: 1e-1
+  weight_decay: 5e-4
+  momentum: 0.9
+  nesterov: True
+
+
+# general config
+dataset_dir: datasets
+dataset_name: SVHN # SVHN, CINIC10 or CIFAR10
+
+# dataset config
+SVHN:
+  num_classes: 10
+  num_epochs: 40
+  opt_milestones : [20, 30]
+  mem_examples:  100
+CIFAR10:
+  num_classes: 10
+  num_epochs: 300
+  opt_milestones : [150, 225]
+  mem_examples:  100
+
+CINIC10:
+  num_classes: 10
+  num_epochs: 300
+  opt_milestones : [150, 225]
+  mem_examples:  100
+
