@@ -138,7 +138,7 @@ CIFAR10 and SVHN will be automatically downloaded and saved in the dir specified
 To train the models in the paper, run this command:
 
 ```train
-python3 train.py modality=<MODALITY> --continue_train=False --log_interval=100
+python3 train.py --modality=<MODALITY> --continue_train=False --log_interval=100
 ```
 - **modality** indicates the type of model to be trained. It can be *"std"* for classical architectures,*"memory"* for the baseline (Memory wrap variant) that uses only the
  memory or *"encoder_memory"* for Memory Wrap. 
