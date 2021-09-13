@@ -11,11 +11,11 @@ To run the code you need to install the following packages:
 - Torchvision 0.8.1 (included in PyTorch)
 - absl-py 0.10 (https://pypi.org/project/absl-py/)
 - captum 0.3.0 (https://captum.ai/)
-- entmax 1.0 (https://github.com/deep-spin/entmax)
 - pyyaml 5.3.1 (https://pypi.org/project/PyYAML/)
 - Numpy 1.19 (included in Python)
 matplotlib 3.3.2 (included in captum)
 - scipy 1.5.2 (https://www.scipy.org/)
+- memorywrap 1.0.6
 
 To install all the packages inside a new Conda environment please type the following commands:
 
@@ -28,8 +28,9 @@ conda install -c anaconda absl-py
 conda install -c pytorch captum
 conda install -c anaconda pyyaml
 conda install -c anaconda scipy
+pip install memorywrap==1.0.6
 ```
-
+Note that this sub-repository use an older version of memorywrap package (1.0.6). 
 ## Repository Structure
 This is the description of repository structure. Note that folders inside "images" dir and "models" dir will be created at running time only when you run the respective scripts to generate images or models.
 ```  
