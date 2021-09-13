@@ -22,16 +22,19 @@ The library contains two main classes:
 ## Usage
 ### Instantiate the layer
 ```python
-memorywrap = MemoryWrapLayer(encoder_dim,output_dim,mlp_activation=torch.nn.ReLU())
+memorywrap = MemoryWrapLayer(encoder_output_dim, output_dim, head=None, classifier=None, distance='cosine')
 ```
 or
 ```python
-memorywrap = BaselineMemory(encoder_dim,output_dim,mlp_activation=torch.nn.ReLU())
+memorywrap = BaselineMemory(encoder_output_dim, output_dim, head=None, classifier=None, distance='cosine')
 ```
 where:
-- *encoder_dim* is the output dimension of the last layer of the encoder 
-- *output_dim* is the desired output dimensione. In the case of the paper *output_dim* is equal to the **number of classes**;
-- *mlp_activation* is the activation that must be used in the hidden layer of the multi-layer perceptron. By default is the ReLU function.
+- *encoder_output_dim* (int) is the output dimension of the last layer of the encoder
+- *output_dim* (int) is the desired output dimensione. In the case of the paper output_dim is equal to the number of classes;
+- *head* (torch.nn.Module): Read head used to project the key and query. It can be a linear or non-linear layer. Input dimensions must be equal to encoder_output_dim (in this case 1280). If None, it is fixed as a linear layer with input and output dimension equal to the input dimension of MemoryWrap(encoder_output_dim). (See https://www.nature.com/articles/nature20101 for further information)
+- *classifier* (torch.nn.Module): Classifier on top of MemoryWrap. Inputs dimensions must be equal at encoder_output_dim*2 for MemoryWrapLayer and encoder_output_dim for BaselineMemory. By default is an MLP as described in the paper. An alternative is to use a linear layer. (e.g. torch.nn.Linear(encoder_output_dim*2, output_dim). Default: torch.nn.Sequential( torch.nn.Linear(encoder_output_dim*2, encoder_output_dim*4), torch.nn.ReLU(), torch.nn.Linear(encoder_output_dim*4, output_dim)
+- *distance* (str): Distance to use to compute the similarity between input and memory set. Allowed values are: cosine, l2 and dot for respectively cosine similarity, l2 distance and dot product distance. Default=cosine
+
 
 ### Forward call
 Add the forward call to your forward function.
