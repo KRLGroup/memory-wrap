@@ -46,12 +46,12 @@ NB: The scripts generates one image at time!
 To reproduce the experiments about memory-based modules please run the following command to use Matching Networks:
 Command:
 ```
-python3 run_matching.py --continue_train=False --optimizer='sgd' --log_interval=100
+python3 run_matching.py --continue_train=False --optimizer='sgd'
 ```
 
 and the following command to use ProtoNet:
 ```
-python3 run_protonet.py --continue_train=False --optimizer='sgd' --log_interval=100
+python3 run_protonet.py --continue_train=False --optimizer='sgd'
 ```
 
 Both the scripts share these arguments:
@@ -63,7 +63,7 @@ To reproduce the experiments about explanations by examples, please run the foll
 
 Command:
 ```
-python3 run_exp_by_examples.py --dir_models=<PATH_MODELS> --dir_datasets='../datasets/' --metric=prediction
+python3 run_exp_by_examples.py --dir_models=<PATH_MODELS> --dir_dataset='../datasets/' --metric=<METRIC>
 ```
 - **dir_models**: it is the path where the models for which you want to train autoencoder are stored
 - **dir_dataset**: is the directory where the dataset is stored.
@@ -79,17 +79,17 @@ First train the autoencoder for the set of models you want to explain. This is n
 
 Command:
 ```
-python3 train_aes_svhn.py --dir_models=<PATH_MODELS> --saving_path='models/ae/SVHN'
+python3 train_aes_svhn.py --dir_models=<PATH_MODELS> --saving_path=<SAVING_PATH> --dir_dataset='../datasets/'
 ```
 - **dir_models**: it is the path where the models for which you want to train autoencoder are stored
 - **saving_path**: dir where autencoders will be save
-
+- **dir_dataset**: is the directory where the dataset is stored.
 
 Then run the run_counterfactuals.py script to get the counterfactuals and their scores.
 
 Command:
 ```
-python3 run_counterfactuals.py --path_models=<PATH_MODELS> --path_aes=<PATH_AES>  --dir_datasets='../datasets/' --algo=<ALGO>
+python3 run_counterfactuals.py --path_models=<PATH_MODELS> --path_aes=<PATH_AES>  --dir_dataset='../datasets/' --algo=<ALGO>
 ```
 where 
 - **path_models**: is the path where the models for which you want to get counterfactuals are stored. Its value should be the same of dir_models argument of the previous script. 
