@@ -1,10 +1,10 @@
-import datasets
+import utils.datasets as datasets
 import torch # type: ignore
 import numpy as np
 import absl.flags
 import absl.app
 import os
-import aux
+import utils.utils as utils
 from typing import Tuple
 
 # user flags
@@ -109,7 +109,7 @@ def run_evaluation(path:str,dataset_dir:str):
         dataset_name = checkpoint['dataset_name']
         load_dataset = getattr(datasets, 'get_'+dataset_name)
 
-        model = aux.get_model(model_name,checkpoint['num_classes'],model_type=modality)
+        model = utils.get_model(model_name,checkpoint['num_classes'],model_type=modality)
         model.load_state_dict(checkpoint['model_state_dict'])
         model = model.to(device)
 

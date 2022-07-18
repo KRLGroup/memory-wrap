@@ -4,8 +4,8 @@ import numpy as np
 import absl.flags
 import absl.app
 import os
-import datasets
-import aux
+import utils.datasets as datasets
+import utils.utils as utils
 import time
 from typing import Tuple
 # user flags
@@ -100,13 +100,13 @@ def run_experiment(path:str,dataset_dir:str):
         # load model
         run,_ = name_model.split('.')
         run = int(run)-1
-        aux.set_seed(run)
+        utils.set_seed(run)
         checkpoint = torch.load(path+name_model)
         #   load model
         modality = checkpoint['modality']
 
         model_name = checkpoint['model_name']
-        model = aux.get_model(model_name,checkpoint['num_classes'],model_type=modality)
+        model = utils.get_model(model_name,checkpoint['num_classes'],model_type=modality)
         model.load_state_dict(checkpoint['model_state_dict'])
         model = model.to(device)
 
@@ -134,7 +134,7 @@ def run_experiment(path:str,dataset_dir:str):
             run_mvy.append(mvy_mean)
         else:
             init_eval_time = time.time()
-            acc_mean, _  = aux.eval_std(model,test_loader,loss_criterion,device)
+            acc_mean, _  = utils.eval_std(model,test_loader,loss_criterion,device)
             end_eval_time = time.time()
 
         # stats
