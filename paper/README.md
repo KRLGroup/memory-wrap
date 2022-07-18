@@ -103,7 +103,7 @@ It is the configuration file used to store the parameters for
 the training process. In order to obtain the results described
 in the paper you have to change the following parameters, choosing
 one of the listed values, and then run the train.py script:
-- model: [mobilenet, efficientnet, googlenet, shufflenet, densenet,resnet18, wider_resnet]
+- model: [mobilenet, efficientnet, googlenet, shufflenet, densenet, resnet18, shufflenet1x, resnet34, densenet169]
 - train_examples: [1000, 2000, 5000, 100000] 
 - dataset_name: [SVHN, CIFAR10, CINIC10]
 
