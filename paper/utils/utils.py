@@ -125,7 +125,7 @@ def get_model(model_name: str, num_classes:int , model_type:str) -> torch.nn.Mod
     elif model_name == 'resnet34':
             model = resnet.ResNet34(num_classes)
     elif model_name == 'densenet169':
-            model = densenet.densenet_cifar_169()
+            model = densenet.densenet_cifar()
     elif model_name == 'shufflenet1x':
              model = shufflenet.ShuffleNetV2(net_size=1)
     elif model_name == 'shufflenet':
