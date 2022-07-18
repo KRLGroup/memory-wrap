@@ -1,17 +1,63 @@
-from typing import List
-from numpy.random import RandomState
-import datasets
+from typing import List, Tuple
+import os 
+import random
+
 import torch # type: ignore
+import numpy as np
+import torch.nn as nn
+from numpy.random import RandomState
+
+import utils.datasets as datasets
 from architectures import resnet
 from architectures import mobilenet
 from architectures import efficientnet
 from architectures import shufflenet
 from architectures import densenet
-from architectures import googlenet
-import numpy as np
-import random
-import os 
-from typing import Tuple
+from architectures import googlenet 
+from architectures import wide_resnet
+
+
+_EPSILON = 1e-6
+
+
+def vector_distance(a:torch.Tensor , b:torch.Tensor, distance_type:str='cosine')->torch.Tensor:
+    """
+    Compute the distance between two vectors.
+    Args:
+        a: first vector
+        b: second vector
+        distance_type: type of distance to use. Can be 'cosine', 'l2' or 'dot'
+    Returns:
+        distance: distance between x and y
+    """
+
+    def _vector_norms(vector:torch.Tensor)->torch.Tensor:
+        """ Computes the vector norms
+        Args:
+            vector: The vector from which there must be calculated the norms
+
+        Returns:
+                A tensor containing the norms of input vector v
+        """
+
+        squared_norms = torch.sum(vector * vector, dim=1, keepdim=True)
+        return torch.sqrt(squared_norms + _EPSILON)
+
+    if distance_type == 'cosine':
+        a_norm = a / _vector_norms(a)
+        b_norm = b / _vector_norms(b)
+        distance = 1 - torch.mm(a_norm,b_norm.transpose(0,1))
+    elif distance_type == 'l2':
+        distance = (
+            a.unsqueeze(1).expand(a.shape[0], b.shape[0], -1) -
+            b.unsqueeze(0).expand(a.shape[0], b.shape[0], -1)
+    ).pow(2).sum(dim=2)
+    elif distance_type == 'dot':
+        expanded_a = a.unsqueeze(1).expand(a.shape[0], b.shape[0], -1)
+        expanded_b = b.unsqueeze(0).expand(a.shape[0], b.shape[0], -1)
+        distance = - (expanded_a * expanded_b).sum(dim=2)
+    return distance
+
 
 def set_seed(seed: int) -> RandomState:
     """ Method to set seed across runs to ensure reproducibility.
@@ -40,7 +86,7 @@ def get_model(model_name: str, num_classes:int , model_type:str) -> torch.nn.Mod
     Args:
         model_name (str): One of ['resnet18, efficientnet , mobilenet,
             shufflenet, googlenet, densenet]
-        num_classes (int): Number of output units. 
+        num_classes (int): Number of output units.
         model_type (str): Specify the model variant. 'std' is the standard
             model, 'memory' is the baseline that uses only the memory and
             'encoder_memory' is Memory Wrap
@@ -62,21 +108,33 @@ def get_model(model_name: str, num_classes:int , model_type:str) -> torch.nn.Mod
             model = efficientnet.EncoderMemoryEfficientNetB0(num_classes)
         else:
             model = efficientnet.EfficientNetB0(num_classes)
+    elif model_name == 'wide-resnet':
+        if model_type=='memory':
+            model = wide_resnet.memory_wrn28_10()
+        elif model_type == 'encoder_memory':
+             model = wide_resnet.encoder_wrn28_10()
+        else:
+            model = wide_resnet.wrn28_10()
     elif model_name == 'resnet18':
         if model_type=='memory':
-            model = resnet.MemoryResNet18()
+            model = resnet.MemoryResNet18(num_classes)
         elif model_type == 'encoder_memory':
-            model = resnet.EncoderMemoryResNet18()
-            
+            model = resnet.EncoderMemoryResNet18(num_classes)
         else:
-            model = resnet.ResNet18()
+            model = resnet.ResNet18(num_classes)
+    elif model_name == 'resnet34':
+            model = resnet.ResNet34(num_classes)
+    elif model_name == 'densenet169':
+            model = densenet.densenet_cifar_169()
+    elif model_name == 'shufflenet1x':
+             model = shufflenet.ShuffleNetV2(net_size=1)
     elif model_name == 'shufflenet':
         if model_type=='memory':
-            model = shufflenet.MemoryShuffleNetV2(net_size=0.5)
+            model = shufflenet.MemoryShuffleNetV2(net_size=0.5,num_classes=num_classes)
         elif model_type == 'encoder_memory':
-            model = shufflenet.EncoderMemoryShuffleNetV2(net_size=0.5)
+            model = shufflenet.EncoderMemoryShuffleNetV2(net_size=0.5,num_classes=num_classes)
         else:
-            model = shufflenet.ShuffleNetV2(net_size=0.5)
+            model = shufflenet.ShuffleNetV2(net_size=0.5,num_classes=num_classes)
     elif model_name == 'densenet':
         if model_type=='memory':
             model = densenet.memory_densenet_cifar()
@@ -104,7 +162,7 @@ def get_model(model_name: str, num_classes:int , model_type:str) -> torch.nn.Mod
    
     return model
 
-def get_loaders(config: dict,seed: int=42)-> List[torch.utils.data.DataLoader]:
+def get_loaders(config: dict, seed: int=42, balanced:bool=False)-> List[torch.utils.data.DataLoader]:
     """ Retrieve the loaders (train, test, validation and memory) for
         the given dataset
 
@@ -130,7 +188,7 @@ def get_loaders(config: dict,seed: int=42)-> List[torch.utils.data.DataLoader]:
         batch_size_train = train_examples
 
     #load data
-    load_dataset = getattr(datasets, 'get_'+dataset)
+    load_dataset = getattr(datasets, 'get_'+dataset, balanced)
     loaders = load_dataset(data_dir,batch_size_train=batch_size_train, batch_size_test=batch_size_test,batch_size_memory=mem_examples,size_train=train_examples,seed=seed)
     return loaders
 
