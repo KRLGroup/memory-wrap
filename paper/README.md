@@ -160,6 +160,23 @@ models/DATASET_NAME/MODALITY/MODEL_NAME/TRAIN_EXAMPLES/
 
 If you want to modify this path, please edit the section "saving/loading stuff" in the train.py script.
 
+### ViT
+To train ViT, please follow these steps:
+1) clone the repository of Omihub (https://github.com/omihub777/ViT-CIFAR)
+2) move the train_vit.py, train_memory_vit.py, utils.py and vit.py file on the root directory of the cloned repo and replace when needed. 
+3) install the required packages (pip install pytorch_lightning warmup_scheduler torchsummary memorywrap)
+4) Run your experiments. E.g. for training ViT + MemoryWrap on the reduced SVHN including 1000 samples run:
+```
+python3 train_memory_vit.py --model-name encoder_vit --dataset svhn --label-smoothing --autoaugment --data_samples 1000
+```
+
+Please refer to the Omihub documentation for the flags to be used in the script.
+For the flag **model_name** train_vit.py supports only "vit" as argument, while train_memory_vit.py supports "encoder_vit" for the ViT+ Memory Wrap and "memory_vit" for Vit+BaselineMemory.
+Finally, we added the following flags:
+-- **mem_samples** indicates the number of samples to store in memory.
+-- **data_samples** indicates the number of samples in the reduced dataset.
+-- **data_root** directory where the dataset is stored.
+
 ## Evaluation
 
 To evaluate your trained model, run:
