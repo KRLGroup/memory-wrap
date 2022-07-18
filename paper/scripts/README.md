@@ -71,3 +71,33 @@ python3 run_exp_by_examples.py --dir_models=<PATH_MODELS> --dir_datasets='../dat
             'input' to use the input non-representativeness
 
 The script prints the metric scores for all the competitors considered in the paper. 
+## Counterfactuals 
+
+To reproduce the experiments about counterfactuals using the post-hoc method based on prototypes and the intrinsic method use the following commands:
+
+First train the autoencoder for the set of models you want to explain. This is needed to compute the scores to evaluate the methods.
+
+Command:
+```
+python3 train_aes_svhn.py --dir_models=<PATH_MODELS> --saving_path='models/ae/SVHN'
+```
+- **dir_models**: it is the path where the models for which you want to train autoencoder are stored
+- **saving_path**: dir where autencoders will be save
+
+
+Then run the run_counterfactuals.py script to get the counterfactuals and their scores.
+
+Command:
+```
+python3 run_counterfactuals.py --path_models=<PATH_MODELS> --path_aes=<PATH_AES>  --dir_datasets='../datasets/' --algo=<ALGO>
+```
+where 
+- **path_models**: is the path where the models for which you want to get counterfactuals are stored. Its value should be the same of dir_models argument of the previous script. 
+- **path_aes**: is the path where the autoencoders for the models of the path_models arguments are stored. Its value should be the same of saving_path argument of the previous script. 
+- **dir_dataset**: is the directory where the dataset is stored.
+- **algo**: algorithm to use to compute the counterfactuals. Supported values for the algo argument are 'proto' to use the post-hoc method, and 'memory' to use the intrinsic method of Memory Wrap.
+
+**(IMPORTANT)** Note that:
+- The experiment has been done only on the SVHN dataset 
+- This script assume that you have already run the train_aes_svhn.py using path_models as the path_models argument and the path_aes as the saving path argument.
+- Some parameters are hard-coded to be consistent with the original experiments and repository (e.g., batch size)
