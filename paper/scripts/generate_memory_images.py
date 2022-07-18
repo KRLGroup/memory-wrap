@@ -1,3 +1,5 @@
+import sys
+sys.path.append('..')
 import os
 import torch # type: ignore
 import torchvision # type: ignore
@@ -5,13 +7,13 @@ import numpy as np
 import matplotlib.pyplot as plt # type: ignore
 import absl.flags
 import absl.app
-import datasets
-import aux
+import utils.datasets as datasets
+import utils.utils as utils
 
 # user flags
 absl.flags.DEFINE_string("path_model", None, "Path of the trained model")
 absl.flags.DEFINE_integer("batch_size_test", 3, "Number of samples for each image")
-absl.flags.DEFINE_string("dir_dataset", 'datasets/', "dir path where datasets are stored")
+absl.flags.DEFINE_string("dir_dataset", '../datasets/', "dir path where datasets are stored")
 absl.flags.mark_flag_as_required("path_model")
 
 FLAGS = absl.flags.FLAGS
@@ -35,7 +37,7 @@ def run(path:str,dataset_dir:str):
     if modality not in ['memory','encoder_memory']:
         raise ValueError(f'Model\'s modality (model type) must be one of [\'memory\',\'encoder_memory\'], not {modality}.')
     dataset_name = checkpoint['dataset_name']
-    model = aux.get_model( checkpoint['model_name'],checkpoint['num_classes'],model_type=modality)
+    model = utils.get_model( checkpoint['model_name'],checkpoint['num_classes'],model_type=modality)
     model.load_state_dict(checkpoint['model_state_dict'])
     model = model.to(device)
     model.eval()
@@ -54,7 +56,7 @@ def run(path:str,dataset_dir:str):
     memory_iter = iter(mem_loader)
     
     #saving stuff
-    dir_save = "images/mem_images/"+dataset_name+"/"+modality+"/" + checkpoint['model_name'] + "/"
+    dir_save = "../images/mem_images/"+dataset_name+"/"+modality+"/" + checkpoint['model_name'] + "/"
     if not os.path.isdir(dir_save): 
         os.makedirs(dir_save)
 
