@@ -97,7 +97,7 @@ def compare(predictions: Union[float, int, torch.Tensor], target: int, kappa:flo
 
     if not isinstance(predictions, (float, int, np.int64)) and len(predictions.size()) > 0:
         predictions = torch.clone(predictions.detach())
-        predictions[y] += kappa  # type: ignore
+        predictions[target] += kappa  # type: ignore
         predictions = torch.argmax(predictions)  # type: ignore
     return predictions != target
 
@@ -266,10 +266,7 @@ def attack(model:torch.nn.Module,X: torch.tensor, Y: torch.tensor, memory: torch
     overall_best_attack = torch.zeros_like(X)
     overall_best_attack = overall_best_attack.cuda()
 
-    # keep track of counterfactual evolution
-    cf_global = {i: [] for i in range(c_steps)}  # type: dict
-
-    # define torch variable for constant used in FISTA optimization
+     # define torch variable for constant used in FISTA optimization
     const = torch.ones(batch_size) * c_init
     const = const.cuda()
     X_num = X
@@ -309,7 +306,6 @@ def attack(model:torch.nn.Module,X: torch.tensor, Y: torch.tensor, memory: torch
             delta = orig - adv
             delta_s = orig - adv_s
 
-            # target_proto = proto_val.detach().clone()
             # l1, l2, l1_l2 losses
             loss_l1_s = compute_l1_loss(delta_s, shape)
 
@@ -336,8 +332,7 @@ def attack(model:torch.nn.Module,X: torch.tensor, Y: torch.tensor, memory: torch
                 # polynomial decay
                 global_step = min(global_step, decay_steps)
 
-                decayed_learning_rate = (learning_rate_init - end_learning_rate) *  \
-                    torch.pow(1 - (global_step / decay_steps),power)  +  end_learning_rate
+                decayed_learning_rate = (learning_rate_init - end_learning_rate) *  torch.pow(1 - (global_step / decay_steps),power)  +  end_learning_rate
                 adv_s = adv_s - (adv_s.grad * decayed_learning_rate)
                 global_step += 1
 
@@ -379,7 +374,6 @@ def attack(model:torch.nn.Module,X: torch.tensor, Y: torch.tensor, memory: torch
                         overall_best_dist[batch_idx] = dist
                         overall_best_attack[batch_idx] = adv_idx[0]
                         best_attack = True
-                        cf_global[_].append(adv_idx)
 
                 # update values of adv, adv_s, delta and delta_s
                 assign_adv = update_adv(adv_s, orig, beta, feature_range)
