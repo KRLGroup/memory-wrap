@@ -7,8 +7,8 @@ Reference: https://github.com/keras-team/keras-applications/blob/master/keras_ap
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from memory import MemoryWrapLayer as EncoderMemoryWrapLayer
-from memory import BaselineMemory as MemoryWrapLayer
+from scripts.wrappers.memory import MemoryWrapLayer as EncoderMemoryWrapLayer
+from scripts.wrappers.memory import BaselineMemory as MemoryWrapLayer
 
 
 def swish(x):

@@ -6,8 +6,8 @@ Mobile Networks for Classification, Detection and Segmentation" for more details
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from wrappers.memory import MemoryWrapLayer as EncoderMemoryWrapLayer
-from wrappers.memory import BaselineMemory as MemoryWrapLayer
+from scripts.wrappers.memory import MemoryWrapLayer as EncoderMemoryWrapLayer
+from scripts.wrappers.memory import BaselineMemory as MemoryWrapLayer
 
 class Block(nn.Module):
     '''expand + depthwise + pointwise'''
