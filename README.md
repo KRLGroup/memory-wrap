@@ -1,5 +1,5 @@
 # Memory Wrap
-Official repository of the paper "A self-interpretable module for deep image classification on small data.. *Biagio La Rosa, Roberto Capobianco and Daniele Nardi.*"
+Official repository of the paper "A self-interpretable module for deep image classification on small data settings *Biagio La Rosa, Roberto Capobianco and Daniele Nardi.*"
 
 The repository contains the PyTorch code to replicate paper results and a guide to use Memory Wrap in your own projects.
 ## Description
