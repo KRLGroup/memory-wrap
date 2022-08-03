@@ -17,14 +17,16 @@ class Bottleneck(nn.Module):
     def __init__(self, in_planes, growth_rate):
         super(Bottleneck, self).__init__()
         self.bn1 = nn.BatchNorm2d(in_planes)
-        self.conv1 = nn.Conv2d(in_planes, 4*growth_rate, kernel_size=1, bias=False)
+        self.conv1 = nn.Conv2d(in_planes, 4*growth_rate, kernel_size=1,
+                               bias=False)
         self.bn2 = nn.BatchNorm2d(4*growth_rate)
-        self.conv2 = nn.Conv2d(4*growth_rate, growth_rate, kernel_size=3, padding=1, bias=False)
+        self.conv2 = nn.Conv2d(4*growth_rate, growth_rate, kernel_size=3,
+                               padding=1, bias=False)
 
     def forward(self, x):
         out = self.conv1(F.relu(self.bn1(x)))
         out = self.conv2(F.relu(self.bn2(out)))
-        out = torch.cat([out,x], 1)
+        out = torch.cat([out, x], 1)
         return out
 
 
@@ -41,12 +43,14 @@ class Transition(nn.Module):
 
 
 class DenseNet(nn.Module):
-    def __init__(self, block, nblocks, growth_rate=12, reduction=0.5, num_classes=10):
+    def __init__(self, block, nblocks, growth_rate=12, reduction=0.5,
+                 num_classes=10):
         super(DenseNet, self).__init__()
         self.growth_rate = growth_rate
 
         num_planes = 2*growth_rate
-        self.conv1 = nn.Conv2d(3, num_planes, kernel_size=3, padding=1, bias=False)
+        self.conv1 = nn.Conv2d(3, num_planes, kernel_size=3, padding=1,
+                               bias=False)
 
         self.dense1 = self._make_dense_layers(block, num_planes, nblocks[0])
         num_planes += nblocks[0]*growth_rate
@@ -92,12 +96,14 @@ class DenseNet(nn.Module):
 
 
 class MemoryDenseNet(nn.Module):
-    def __init__(self, block, nblocks, growth_rate=12, reduction=0.5, num_classes=10):
+    def __init__(self, block, nblocks, growth_rate=12, reduction=0.5,
+                 num_classes=10):
         super(MemoryDenseNet, self).__init__()
         self.growth_rate = growth_rate
 
         num_planes = 2*growth_rate
-        self.conv1 = nn.Conv2d(3, num_planes, kernel_size=3, padding=1, bias=False)
+        self.conv1 = nn.Conv2d(3, num_planes, kernel_size=3, padding=1,
+                               bias=False)
 
         self.dense1 = self._make_dense_layers(block, num_planes, nblocks[0])
         num_planes += nblocks[0]*growth_rate
@@ -122,14 +128,14 @@ class MemoryDenseNet(nn.Module):
 
         self.bn = nn.BatchNorm2d(num_planes)
         self.mw = MemoryWrapLayer(num_planes, num_classes)
-   
+
     def _make_dense_layers(self, block, in_planes, nblock):
         layers = []
         for i in range(nblock):
             layers.append(block(in_planes, self.growth_rate))
             in_planes += self.growth_rate
         return nn.Sequential(*layers)
-        
+
     def forward_encoder(self, x):
         out = self.conv1(x)
         out = self.trans1(self.dense1(out))
@@ -150,13 +156,16 @@ class MemoryDenseNet(nn.Module):
         out_mw = self.mw(out, out_ss, return_weights)
         return out_mw
 
+
 class EncoderMemoryDenseNet(MemoryDenseNet):
-    def __init__(self, block, nblocks, growth_rate=12, reduction=0.5, num_classes=10):
+    def __init__(self, block, nblocks, growth_rate=12, reduction=0.5,
+                 num_classes=10):
         super(MemoryDenseNet, self).__init__()
         self.growth_rate = growth_rate
 
         num_planes = 2*growth_rate
-        self.conv1 = nn.Conv2d(3, num_planes, kernel_size=3, padding=1, bias=False)
+        self.conv1 = nn.Conv2d(3, num_planes, kernel_size=3, padding=1,
+                               bias=False)
 
         self.dense1 = self._make_dense_layers(block, num_planes, nblocks[0])
         num_planes += nblocks[0]*growth_rate
@@ -181,18 +190,22 @@ class EncoderMemoryDenseNet(MemoryDenseNet):
 
         self.bn = nn.BatchNorm2d(num_planes)
         self.mw = EncoderMemoryWrapLayer(num_planes, num_classes)
-   
+
+
 def densenet_cifar():
-    return DenseNet(Bottleneck, [6,12,24,16], growth_rate=12)
+    return DenseNet(Bottleneck, [6, 12, 24, 16], growth_rate=12)
+
 
 def memory_densenet_cifar():
-    return MemoryDenseNet(Bottleneck, [6,12,24,16], growth_rate=12)
+    return MemoryDenseNet(Bottleneck, [6, 12, 24, 16], growth_rate=12)
+
 
 def encoder_memory_densenet_cifar():
-    return EncoderMemoryDenseNet(Bottleneck, [6,12,24,16], growth_rate=12)
+    return EncoderMemoryDenseNet(Bottleneck, [6, 12, 24, 16], growth_rate=12)
+
 
 def test():
     net = densenet_cifar()
-    x = torch.randn(1,3,32,32)
+    x = torch.randn(1, 3, 32, 32)
     y = net(x)
     print(y)

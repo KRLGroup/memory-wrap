@@ -4,6 +4,7 @@ import torch.nn as nn
 from memorywrap import MemoryWrapLayer as EncoderMemoryWrapLayer
 from memorywrap import BaselineMemory as MemoryWrapLayer
 
+
 class Wide_Basic(nn.Module):
 
     def __init__(self, in_channels, out_channels, stride, dropout):
@@ -12,15 +13,19 @@ class Wide_Basic(nn.Module):
         self.residual = nn.Sequential(
             nn.BatchNorm2d(in_channels),
             nn.ReLU(inplace=True),
-            nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1, bias=False),
+            nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1,
+                      bias=False),
             nn.Dropout(dropout),
             nn.BatchNorm2d(out_channels),
             nn.ReLU(inplace=True),
-            nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False)
+            nn.Conv2d(out_channels, out_channels, kernel_size=3,
+                      stride=stride, padding=1, bias=False)
         )
 
         if stride != 1 or in_channels != out_channels:
-            self.shortcut = nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=stride, bias=False)
+            self.shortcut = nn.Conv2d(in_channels, out_channels,
+                                      kernel_size=1, stride=stride,
+                                      bias=False)
         else:
             self.shortcut = nn.Sequential()
 

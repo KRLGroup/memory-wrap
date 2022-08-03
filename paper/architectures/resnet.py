@@ -16,7 +16,8 @@ class BasicBlock(nn.Module):
     def __init__(self, in_planes, planes, stride=1):
         super(BasicBlock, self).__init__()
         self.conv1 = nn.Conv2d(
-            in_planes, planes, kernel_size=3, stride=stride, padding=1, bias=False)
+            in_planes, planes, kernel_size=3, stride=stride, padding=1,
+            bias=False)
         self.bn1 = nn.BatchNorm2d(planes)
         self.conv2 = nn.Conv2d(planes, planes, kernel_size=3,
                                stride=1, padding=1, bias=False)
@@ -70,7 +71,8 @@ class Bottleneck(nn.Module):
 
 
 class ResNet(nn.Module):
-    def __init__(self, block, num_blocks, num_classes=10,initialize=True):
+    def __init__(self, block, num_blocks, num_classes=10,
+                 initialize=True):
         super(ResNet, self).__init__()
         self.in_planes = 64
 
@@ -91,6 +93,7 @@ class ResNet(nn.Module):
                 elif isinstance(m, nn.BatchNorm2d):
                     m.weight.data.fill_(1)
                     m.bias.data.zero_()
+
     def _make_layer(self, block, planes, num_blocks, stride):
         strides = [stride] + [1]*(num_blocks-1)
         layers = []
@@ -112,7 +115,7 @@ class ResNet(nn.Module):
 
 
 class MemoryResNet(nn.Module):
-    def __init__(self, block, num_blocks, num_classes=10,initialize=True):
+    def __init__(self, block, num_blocks, num_classes=10, initialize=True):
         super(MemoryResNet, self).__init__()
         self.in_planes = 64
 
@@ -133,6 +136,7 @@ class MemoryResNet(nn.Module):
                 elif isinstance(m, nn.BatchNorm2d):
                     m.weight.data.fill_(1)
                     m.bias.data.zero_()
+
     def _make_layer(self, block, planes, num_blocks, stride):
         strides = [stride] + [1]*(num_blocks-1)
         layers = []
@@ -161,8 +165,9 @@ class MemoryResNet(nn.Module):
         out_mw = self.mw(out, out_ss, return_weights)
         return out_mw
 
+
 class EncoderMemoryResNet(MemoryResNet):
-    def __init__(self, block, num_blocks, num_classes=10,initialize=True):
+    def __init__(self, block, num_blocks, num_classes=10, initialize=True):
         super(MemoryResNet, self).__init__()
         self.in_planes = 64
 
@@ -181,10 +186,9 @@ class EncoderMemoryResNet(MemoryResNet):
                     n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
                     m.weight.data.normal_(0, math.sqrt(2. / n))
                 if isinstance(m, nn.BatchNorm2d):
-                     m.weight.data.fill_(1)
-                     m.bias.data.zero_()
+                    m.weight.data.fill_(1)
+                    m.bias.data.zero_()
 
-    
 
 def ResNet18():
     return ResNet(BasicBlock, [2, 2, 2, 2])
@@ -225,6 +229,7 @@ def MemoryResNet101():
 def MemoryResNet152():
     return MemoryResNet(Bottleneck, [3, 8, 36, 3])
 
+
 def EncoderMemoryResNet18():
     return EncoderMemoryResNet(BasicBlock, [2, 2, 2, 2])
 
@@ -243,6 +248,7 @@ def EncoderMemoryResNet101():
 
 def EncoderMemoryResNet152():
     return EncoderMemoryResNet(Bottleneck, [3, 8, 36, 3])
+
 
 def test():
     net = ResNet18()
