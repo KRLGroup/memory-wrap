@@ -4,3 +4,4 @@ architectures/__pycache__/
 core
 *transfer*.py
 *.pyc
+.vscode/
