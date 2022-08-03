@@ -1,5 +1,5 @@
 # Scripts 
-All the scripts in this directory assume that the trained models is supposed to **contain the information needed** like the dataset, the number of training samples, the modality, etc. This information are automatically stored if you use our training script. Otherwise you have to manually modify the lines about the checkpoint**
+All the scripts in this directory assume that the trained models are supposed to **contain the information needed** like the dataset, the number of training samples, the modality, etc. This information are automatically stored if you use our training script. Otherwise you have to manually modify the lines about the checkpoint**
 
 ## Generate Memory Images
 Script to generate images containing the input and the samples in memory associated with a positive weight.
