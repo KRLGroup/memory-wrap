@@ -1,4 +1,4 @@
-#ref https://raw.githubusercontent.com/hiyouga/AMP-Regularizer/master/models/wide_resnet.py
+# ref https://raw.githubusercontent.com/hiyouga/AMP-Regularizer/master/models/wide_resnet.py
 
 import torch.nn as nn
 from memorywrap import MemoryWrapLayer as EncoderMemoryWrapLayer
@@ -94,8 +94,6 @@ class Encoder_Wide_ResNet(nn.Module):
             nn.ReLU(inplace=True),
             nn.AvgPool2d(8),
             nn.Flatten(),
-            #nn.Dropout(dropout),
-            #nn.Linear(nStages[3], num_classes)
         )
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -152,7 +150,6 @@ class Memory_Wide_ResNet(nn.Module):
             nn.AvgPool2d(8),
             nn.Flatten(),
             nn.Dropout(dropout),
-            #nn.Linear(nStages[3], num_classes)
         )
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
