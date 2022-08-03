@@ -289,7 +289,8 @@ def eval(model: torch.nn.Module, loader: torch.utils.data.DataLoader,
                 queries = model.f(embedding_support, embedding_input)
                 # Efficiently calculate distance between all queries and all prototypes
                 # Output should have shape (q_queries * k_way, k_way) = (num_queries, k_way)
-                distances = utils.vector_distance(queries, embedding_support, 'cosine')
+                distances = utils.vector_distance(queries, embedding_support,
+                                                  'cosine')
 
                 # Calculate "attention" as softmax over support-query distances
                 attention = (-distances).softmax(dim=1)
@@ -423,8 +424,10 @@ def run_experiment(config: dict):
 
         # log
         print(f"Run:{run+1} |  Accuracy {best_acc:.2f} | "
-              f"Mean Accuracy:{np.mean(run_acc):.2f} | Std Dev Accuracy:{np.std(run_acc):.2f}\t"
-              f"T:{(train_time -run_time)/60:.2f}min\tE:{(end_eval_time -init_eval_time)/60:.2f}")
+              f"Mean Accuracy:{np.mean(run_acc):.2f} | "
+              f"Std Dev Accuracy:{np.std(run_acc):.2f}\t"
+              f"T:{(train_time -run_time)/60:.2f}min\t"
+              f"E:{(end_eval_time - init_eval_time)/60:.2f}")
 
 
 def main(argv):

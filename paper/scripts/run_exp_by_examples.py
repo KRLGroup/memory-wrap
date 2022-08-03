@@ -289,7 +289,7 @@ def run_experiment(path: str, dataset_dir: str, metric: str):
                 # Log stuff
                 print(f"({i / len(test_loader):.2f})\t\t"
                       f"chp:{np.mean(chpt1_differences):.4f}\t"
-                      f"mem:{np.mean(mem_differences):.4f}\t" 
+                      f"mem:{np.mean(mem_differences):.4f}\t"
                       f"knn*:{np.mean(dknn1_differences):.4f}\t"
                       f"\rand:{np.mean(random_difference):.4f}", end='\r')
 
