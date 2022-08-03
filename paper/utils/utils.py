@@ -2,7 +2,7 @@ from typing import List, Tuple
 import os 
 import random
 
-import torch # type: ignore
+import torch 
 import numpy as np
 import torch.nn as nn
 from numpy.random import RandomState

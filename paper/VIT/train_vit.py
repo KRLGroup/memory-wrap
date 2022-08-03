@@ -8,7 +8,6 @@ import warmup_scheduler
 import numpy as np
 from utils import get_model, get_dataset, get_experiment_name, get_criterion
 from da import CutMix, MixUp
-import numpy as np
 import random
 import os
 from typing import List

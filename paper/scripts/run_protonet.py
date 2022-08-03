@@ -7,7 +7,7 @@ import os
 import time
 import pickle
 
-import torch # type: ignore
+import torch 
 import numpy as np
 import absl.flags
 import absl.app
