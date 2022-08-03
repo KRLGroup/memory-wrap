@@ -1,3 +1,5 @@
+# reference: https://github.com/omihub777/ViT-CIFAR/blob/main/main.py
+
 import argparse
 import torch
 import torchvision
