@@ -111,8 +111,6 @@ if args.mlp_hidden != args.hidden*4:
     print(f"[INFO] In original paper, mlp_hidden(CURRENT:{args.mlp_hidden}) "
           f"is set to: {args.hidden*4}(={args.hidden}*4)")
 
-train_ds, test_ds = get_dataset(args)
-
 
 class Net(pl.LightningModule):
     def __init__(self, hparams):
