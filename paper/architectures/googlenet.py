@@ -11,7 +11,8 @@ from memorywrap import BaselineMemory as MemoryWrapLayer
 
 
 class Inception(nn.Module):
-    def __init__(self, in_planes, n1x1, n3x3red, n3x3, n5x5red, n5x5, pool_planes):
+    def __init__(self, in_planes, n1x1, n3x3red, n3x3, n5x5red, n5x5,
+                 pool_planes):
         super(Inception, self).__init__()
         # 1x1 conv branch
         self.b1 = nn.Sequential(
@@ -56,7 +57,7 @@ class Inception(nn.Module):
         y2 = self.b2(x)
         y3 = self.b3(x)
         y4 = self.b4(x)
-        return torch.cat([y1,y2,y3,y4], 1)
+        return torch.cat([y1, y2, y3, y4], 1)
 
 
 class GoogLeNet(nn.Module):
@@ -102,6 +103,7 @@ class GoogLeNet(nn.Module):
         out = out.view(out.size(0), -1)
         out = self.linear(out)
         return out
+
 
 class MemoryGoogLeNet(nn.Module):
     def __init__(self):
@@ -156,6 +158,7 @@ class MemoryGoogLeNet(nn.Module):
         out_mw = self.mw(out, out_ss, return_weights)
         return out_mw
 
+
 class EncoderMemoryGoogLeNet(MemoryGoogLeNet):
     def __init__(self):
         super(MemoryGoogLeNet, self).__init__()
@@ -182,12 +185,9 @@ class EncoderMemoryGoogLeNet(MemoryGoogLeNet):
         self.avgpool = nn.AvgPool2d(8, stride=1)
         self.mw = EncoderMemoryWrapLayer(1024, 10)
 
-    
 
 def test():
     net = GoogLeNet()
-    x = torch.randn(1,3,32,32)
+    x = torch.randn(1, 3, 32, 32)
     y = net(x)
     print(y.size())
-
-# test()

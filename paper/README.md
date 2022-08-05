@@ -1,50 +1,60 @@
 # Memory Wrap: a Data-Efficient and Interpretable Extension to Image Classification Models  
 
-This repository is the official implementation of Memory Wrap: a Data-Efficient and Interpretable Extension to Image Classification Models.
-
+This repository is the official implementation of the paper: "A self-interpretable module for deep image classification on small data. *Biagio La Rosa, Roberto Capobianco and Daniele Nardi.*  Appl Intell (2022). https://doi.org/10.1007/s10489-022-03886-6"
 ## Requirements
 
 To run the code you need to install the following packages:
 
-- Python 3.8.5
-- PyTorch 1.7 (https://pytorch.org/)
-- Torchvision 0.8.1 (included in PyTorch)
+- python 3.8.5
+- pytorch 1.7 (https://pytorch.org/)
+- torchvision 0.8.1 (included in PyTorch)
 - absl-py 0.10 (https://pypi.org/project/absl-py/)
 - captum 0.3.0 (https://captum.ai/)
+- entmax 1.0 (https://github.com/deep-spin/entmax)
 - pyyaml 5.3.1 (https://pypi.org/project/PyYAML/)
-- Numpy 1.19 (included in Python)
-matplotlib 3.3.2 (included in captum)
+- numpy 1.19 (included in Python)
+- matplotlib 3.3.2 (included in captum)
 - scipy 1.5.2 (https://www.scipy.org/)
-- memorywrap 1.0.6
+- einops 0.4.1 (https://pypi.org/project/einops/)
 
-To install all the packages inside a new Conda environment please type the following commands:
 
-```
-conda create --name MemoryWrap
-conda activate MemoryWrap
-conda install python=3.8
-pytorch torchvision torchaudio -c pytorch
-conda install -c anaconda absl-py
-conda install -c pytorch captum
-conda install -c anaconda pyyaml
-conda install -c anaconda scipy
-pip install memorywrap==1.0.6
-```
-Note that this sub-repository use an older version of memorywrap package (1.0.6). 
+
 ## Repository Structure
 This is the description of repository structure. Note that folders inside "images" dir and "models" dir will be created at running time only when you run the respective scripts to generate images or models.
 ```  
    Memory Wrap
    ├── architectures
-   │   ├── effientnet.py
+   │   ├── autoencoder.py
+   │   ├── efficientnet.py
    │   ├── mobilenet.py
    │   ├── resnet.py
    │   ├── googlenet.py
    │   ├── shufflenet.py
-   │   ├── densenet.py
-   │   └── memory.py
+   │   ├── wide_resnet.py
+   │   └── densenet.py
+   ├── scripts
+   │   └── wrappers
+   │   │   ├── densenet.py
+   │   │   ├── efficientnet.py
+   │   │   ├── googlenet.py
+   │   │   ├── mobilenet.py
+   │   │   ├── resnet.py
+   │   │   ├── shufflenet.py
+   │   │   └── memory.py
+   │   ├── run_cf_proto.py
+   │   ├── run_exp_by_examples.py
+   │   ├── run_matching.py
+   │   ├── run_protonet.py
+   │   ├── train_aes.svhn.py
+   │   ├── generate_heatmaps.py
+   │   ├── generate_memory_images.py
+   │   └── README.md
    ├── config
    │   └── train.yaml
+   ├── utils
+   │   ├── counterfactuals_utils.py
+   │   ├── datasets.py
+   │   └── utils.py
    ├── images
    │   ├── mem_images
    │   |   ├── SVHN
@@ -71,23 +81,20 @@ This is the description of repository structure. Note that folders inside "image
    ├── README.md
    ├── train.py
    ├── eval.py
-   ├── eval_dir.py
+   ├── memory.py
    ├── explanation_accuracy.py
-   ├── generate_heatmaps.py
-   ├── generate_memory_images.py
-   ├── aux.py
-   └── datasets.py
+   └── README.md
+
 ```
 
 ## Architectures
-This directory contains the PyTorch modules of MobileNet, EfficientNet, ResNet and Memory Wrap.
+This directory contains the PyTorch modules of the architectures used in the paper (DenseNet, ResNet, EfficientNet, AutoEncoders, ShuffleNet, WideResNet, GoogleNet, MobileNet) and the Memory Wrap module.
 
 ### memory.py
-The memory.py file contains the modules needed to create a Memory Wrap. It contains 4 classes:
-- Identity: module used to replace the last layers of standard classifiers with Memory Wrap (see an old discussion on https://discuss.pytorch.org/t/how-to-delete-layer-in-pretrained-model/17648)
+The memory.py file contains the modules needed to create a Memory Wrap. It contains 3 classes:
 - MLP: implementation of multi-layer perceptron used as last layer of Memory Wrap
-- MemoryWrapLayer: module that implements the BASELINE (variant) of Memory Wrap that uses only the memory content to output the prediction
-- EncoderMemoryWrapLayer: module that implements the full variant of Memory Wrap that uses both the memory content and the encoder to output the prediction
+- BaselineMemory: module that implements the BASELINE (variant) of Memory Wrap that uses only the memory content to output the prediction
+- MemoryWrapLayer: module that implements the full variant of Memory Wrap that uses both the memory content and the encoder to output the prediction
 ## Configuration File (for training)
 ### config/train.yaml
 
@@ -95,7 +102,7 @@ It is the configuration file used to store the parameters for
 the training process. In order to obtain the results described
 in the paper you have to change the following parameters, choosing
 one of the listed values, and then run the train.py script:
-- model: [mobilenet, efficientnet, googlenet, shufflenet, densenet,resnet18]
+- model: [mobilenet, efficientnet, googlenet, shufflenet, densenet, resnet18, shufflenet1x, resnet34, densenet169]
 - train_examples: [1000, 2000, 5000, 100000] 
 - dataset_name: [SVHN, CIFAR10, CINIC10]
 
@@ -160,29 +167,43 @@ models/DATASET_NAME/MODALITY/MODEL_NAME/TRAIN_EXAMPLES/
 
 If you want to modify this path, please edit the section "saving/loading stuff" in the train.py script.
 
+### ViT
+To train ViT, please follow these steps:
+1) clone the repository of Omihub (https://github.com/omihub777/ViT-CIFAR)
+2) move the train_vit.py, train_memory_vit.py, utils.py and vit.py file on the root directory of the cloned repo and replace when needed. 
+3) install the required packages (pip install pytorch_lightning warmup_scheduler torchsummary torchvision memorywrap)
+4) Run your experiments. E.g. for training ViT + MemoryWrap on the reduced SVHN including 1000 samples run:
+```
+python3 train_memory_vit.py --model-name encoder_vit --dataset svhn --label-smoothing --autoaugment --data_samples 1000
+```
+
+Please refer to the Omihub documentation for the flags to be used in the script.
+For the flag **model_name** train_vit.py supports only "vit" as argument, while train_memory_vit.py supports "encoder_vit" for the ViT+ Memory Wrap and "memory_vit" for Vit+BaselineMemory.
+Finally, we added the following flags:
+-- **mem_samples** indicates the number of samples to store in memory.
+-- **data_samples** indicates the number of samples in the reduced dataset.
+-- **data_root** directory where the dataset is stored.
+
 ## Evaluation
+**NB: A trained model is supposed to contain the information needed for evaluation like the dataset, the number of training samples, the modality, etc. This information are automatically stored if you use our training script.**
 
 To evaluate your trained model, run:
 
 ```eval
-python eval.py --path_model=<PATH_MODEL> --dataset=<NAME_DATASET> --modality=<MODALITY>
+python eval.py --path=<PATH> --dir_dataset='datasets/'
 ```
-- **path_model**: it is the path where the model is stored
-- **dataset** (*CIFAR10* or *SVHN*): dataset used to train the model
-- **modality** (*std*, *memory* or *encoder_memory*): indicates the type of trained model.
+- **path**: it is the path where the model is stored or the models are stored. It accept both the path of a directory or the full path of a single model.
+- **dir_dataset**: dir where datasets are stored
 
-To evaluate a set of models inside a dir returning mean and standard deviation, run:
-```eval
-python eval_dir.py --path=<PATH_MODEL> 
-```
-- **path_model**: it is the path of dir where the models are stored
 
 
 To compute the explanation accuracy over different runs (directory), run:
 ```
-python3 explanation_accuracy.py --path_models=<DIR_MODELS> --dataset=<NAME_DATASET> --modality=<MODALITY>
+python3 explanation_accuracy.py --path_models=<DIR_MODELS> --dir_dataset='dataset/'
 ```
 - **path_models**: it is the path where models are stored
+- **dir_dataset**: dir where datasets are stored
+
 
 
 **Expected Output**:
@@ -192,43 +213,7 @@ Explanation accuracy (mean):0.00       (std_dev):0.00    counterfactual acc mean
 Where *Explanation accuracy*  is the metric shown in Table 5. *counterfactual mean* refers to the performance shown in Table 6. *example acc* refers to the accuracy reached by the model for inputs where the sample in memory associated with the highest weight is an explanation by example.
 
 
-## Generate Memory Images
-Script to generate images containing the input and the samples in memory associated with a positive weight.
-<br>**Note:** Memory used to generate  memory images is DIFFERENT from memory used to heatmaps of generate_heatmaps.py scripts, due to different batch sizes and the usage of two iterators on the same datasets (for heatmaps).
 
-Command:
-```
-python3 generate_memory_images.py --path_model=<PATH_MODEL> --dataset=<NAME_DATASET> --modality=<MODALITY>
-```
-- **path_model**: it is the path where the model is stored
-
-Images will be stored in the following path:
-```
-images/mem_images/DATASET_NAME/MODALITY/MODEL_NAME/
-```
-To modify the path, please edit the value of variable *dir_save*.
-## Generate Heatmaps
-Script to generate heatmaps of images in the training dataset. Heatmaps are computed using the Integrated Gradient attribution method, using as a baseline a white image.
- <br>**Note:** Memory used to generate heatmaps is DIFFERENT from memory used to generate memory images of generate_memory_image.py scripts, due to different batch size the usage of two iterators on the same datasets (for heatmaps script).
-
-Command:
-```
- generate_heatmaps.py --path_model=<PATH_MODEL> --dataset=<NAME_DATASET> --modality=<MODALITY> --batch_size_test=3
-```
-- **path_model**: it is the path where the model is stored
-- **batch_size_test**: number of testing samples to show inside one image (tested on batch size < 3)
-
-To change the baseline modify the variable *baseline_memory* and *baseline_input* inside the script. Note that changing the baseline will change also the heatmaps, as explained in the appendix.
-
-> Note: if the process is killed or you receive an OOM message, it is likely that you have not enough VRAM in your GPU in order to apply Integrated Gradients. In this case modify the first instruction in run method to use your cpu (variable "device").
-
-Heatmaps will be stored in the following path:
-```
-images/saliency/DATASET_NAME/MODALITY/MODEL_NAME/
-```
-To modify the path, please edit the value of variable *dir_save*.
-
-NB: The scripts generates one image at time!
 ## Pre-trained Models
 You can find a pre-trained model used to generate
  part of the images of the paper in the following path:
@@ -237,6 +222,7 @@ models/pretrained.pt
 ```
 To get models for the other configurations, please run the 
 training script described above.
+
 
 ## Seeds
 For the training script we change the seed at each run in the following manner (function set_seed in aux.py):
@@ -252,9 +238,13 @@ For the training script we change the seed at each run in the following manner (
 ```
 where NUM_RUN is the number of the current run.
 
-## Auxiliary files
+## Utils
 
 ### datasets.py
 It contains functions to splits the datasets and to get PyTorch Dataloaders for the training and testing phase.
-### aux.py
+
+### utils.py
 It contains auxiliary functions used to train and load models.
+
+### counterfactuals_utils.py
+It contains auxiliary functions used in the script to compute counterfactuals (scripts/run_counterfactuals.py).

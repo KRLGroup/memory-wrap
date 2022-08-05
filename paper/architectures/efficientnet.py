@@ -167,7 +167,6 @@ class MemoryEfficientNet(nn.Module):
         self.layers = self._make_layers(in_channels=32)
 
         # replaced last layer
-        #self.linear = nn.Linear(cfg['out_channels'][-1], num_classes)
         self.mw = MemoryWrapLayer(cfg['out_channels'][-1], num_classes)
 
     def _make_layers(self, in_channels):

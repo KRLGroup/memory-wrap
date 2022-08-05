@@ -16,10 +16,12 @@ class ShuffleBlock(nn.Module):
         self.groups = groups
 
     def forward(self, x):
-        '''Channel shuffle: [N,C,H,W] -> [N,g,C/g,H,W] -> [N,C/g,g,H,w] -> [N,C,H,W]'''
+        '''Channel shuffle: [N,C,H,W] -> [N,g,C/g,H,W]
+            -> [N,C/g,g,H,w] -> [N,C,H,W]'''
         N, C, H, W = x.size()
         g = self.groups
-        return x.view(N, g, C//g, H, W).permute(0, 2, 1, 3, 4).reshape(N, C, H, W)
+        return x.view(N, g, C//g, H, W).permute(0, 2, 1, 3, 4).reshape(
+            N, C, H, W)
 
 
 class SplitBlock(nn.Module):
@@ -41,7 +43,8 @@ class BasicBlock(nn.Module):
                                kernel_size=1, bias=False)
         self.bn1 = nn.BatchNorm2d(in_channels)
         self.conv2 = nn.Conv2d(in_channels, in_channels,
-                               kernel_size=3, stride=1, padding=1, groups=in_channels, bias=False)
+                               kernel_size=3, stride=1, padding=1,
+                               groups=in_channels, bias=False)
         self.bn2 = nn.BatchNorm2d(in_channels)
         self.conv3 = nn.Conv2d(in_channels, in_channels,
                                kernel_size=1, bias=False)
@@ -64,7 +67,8 @@ class DownBlock(nn.Module):
         mid_channels = out_channels // 2
         # left
         self.conv1 = nn.Conv2d(in_channels, in_channels,
-                               kernel_size=3, stride=2, padding=1, groups=in_channels, bias=False)
+                               kernel_size=3, stride=2, padding=1,
+                               groups=in_channels, bias=False)
         self.bn1 = nn.BatchNorm2d(in_channels)
         self.conv2 = nn.Conv2d(in_channels, mid_channels,
                                kernel_size=1, bias=False)
@@ -74,7 +78,8 @@ class DownBlock(nn.Module):
                                kernel_size=1, bias=False)
         self.bn3 = nn.BatchNorm2d(mid_channels)
         self.conv4 = nn.Conv2d(mid_channels, mid_channels,
-                               kernel_size=3, stride=2, padding=1, groups=mid_channels, bias=False)
+                               kernel_size=3, stride=2, padding=1,
+                               groups=mid_channels, bias=False)
         self.bn4 = nn.BatchNorm2d(mid_channels)
         self.conv5 = nn.Conv2d(mid_channels, mid_channels,
                                kernel_size=1, bias=False)
@@ -113,7 +118,7 @@ class MemoryShuffleNetV2(nn.Module):
                                kernel_size=1, stride=1, padding=0, bias=False)
         self.bn2 = nn.BatchNorm2d(out_channels[3])
         self.mw = MemoryWrapLayer(out_channels[3], 10)
- 
+
     def _make_layer(self, out_channels, num_blocks):
         layers = [DownBlock(self.in_channels, out_channels)]
         for i in range(num_blocks):
@@ -131,7 +136,7 @@ class MemoryShuffleNetV2(nn.Module):
         out = F.avg_pool2d(out, 4)
         out = out.view(out.size(0), -1)
         return out
-    
+
     def forward(self, x, ss, return_weights=False):
 
         # input
@@ -141,6 +146,7 @@ class MemoryShuffleNetV2(nn.Module):
         # prediction
         out_mw = self.mw(out, out_ss, return_weights)
         return out_mw
+
 
 class EncoderMemoryShuffleNetV2(nn.Module):
     def __init__(self, net_size):
@@ -159,7 +165,7 @@ class EncoderMemoryShuffleNetV2(nn.Module):
                                kernel_size=1, stride=1, padding=0, bias=False)
         self.bn2 = nn.BatchNorm2d(out_channels[3])
         self.mw = EncoderMemoryWrapLayer(out_channels[3], 10)
- 
+
     def _make_layer(self, out_channels, num_blocks):
         layers = [DownBlock(self.in_channels, out_channels)]
         for i in range(num_blocks):
@@ -169,7 +175,6 @@ class EncoderMemoryShuffleNetV2(nn.Module):
 
     def forward_encoder(self, x):
         out = F.relu(self.bn1(self.conv1(x)))
-        # out = F.max_pool2d(out, 3, stride=2, padding=1)
         out = self.layer1(out)
         out = self.layer2(out)
         out = self.layer3(out)
@@ -177,7 +182,7 @@ class EncoderMemoryShuffleNetV2(nn.Module):
         out = F.avg_pool2d(out, 4)
         out = out.view(out.size(0), -1)
         return out
-    
+
     def forward(self, x, ss, return_weights=False):
 
         # input
@@ -187,6 +192,7 @@ class EncoderMemoryShuffleNetV2(nn.Module):
         # prediction
         out_mw = self.mw(out, out_ss, return_weights)
         return out_mw
+
 
 class ShuffleNetV2(nn.Module):
     def __init__(self, net_size):
@@ -215,7 +221,6 @@ class ShuffleNetV2(nn.Module):
 
     def forward(self, x):
         out = F.relu(self.bn1(self.conv1(x)))
-        # out = F.max_pool2d(out, 3, stride=2, padding=1)
         out = self.layer1(out)
         out = self.layer2(out)
         out = self.layer3(out)
@@ -224,6 +229,7 @@ class ShuffleNetV2(nn.Module):
         out = out.view(out.size(0), -1)
         out = self.linear(out)
         return out
+
 
 configs = {
     0.5: {
@@ -251,6 +257,3 @@ def test():
     x = torch.randn(3, 3, 32, 32)
     y = net(x)
     print(y.shape)
-
-
-# test()

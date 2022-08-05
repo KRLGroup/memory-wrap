@@ -5,7 +5,7 @@ import absl.flags
 import absl.app
 import os
 import yaml
-import aux
+import utils.utils as utils
 import time
 import pickle
 from typing import List
@@ -168,9 +168,9 @@ def run_experiment(config:dict,modality:str):
         run_acc = info['accuracies']
     for run in range(initial_run,config['runs']):
         run_time = time.time()
-        aux.set_seed(run)
+        utils.set_seed(run)
         torch.cuda.init()
-        model = aux.get_model(config['model'],num_classes,model_type=modality)
+        model = utils.get_model(config['model'],num_classes,model_type=modality)
         model = model.to(device)
         # training parameters
         optimizer = torch.optim.SGD(model.parameters(),**dict_optim)
@@ -179,7 +179,7 @@ def run_experiment(config:dict,modality:str):
         else:
             scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer,  milestones=opt_milestones)
         # get dataset
-        train_loader, _, test_loader, mem_loader = aux.get_loaders(config,run)
+        train_loader, _, test_loader, mem_loader = utils.get_loaders(config,run)
 
          # training process
         if modality == 'memory' or modality == 'encoder_memory':
@@ -191,7 +191,7 @@ def run_experiment(config:dict,modality:str):
             # perform 5 times the validation to stabilize results (due to random selection of memory samples)
             init_eval_time = time.time()
             for _ in range(5):
-                best_acc, best_loss = aux.eval_memory(model,test_loader, mem_loader,loss_criterion,device)
+                best_acc, best_loss = utils.eval_memory(model,test_loader, mem_loader,loss_criterion,device)
                 cum_acc.append(best_acc)
             best_acc = np.mean(cum_acc)
             end_eval_time = time.time()
@@ -200,7 +200,7 @@ def run_experiment(config:dict,modality:str):
             model = train_std_model(model,train_loader,optimizer,scheduler,loss_criterion,config[dataset_name]['num_epochs'],device)
             train_time = time.time()
             init_eval_time = time.time()
-            best_acc, best_loss  = aux.eval_std(model,test_loader,loss_criterion,device)
+            best_acc, best_loss  = utils.eval_std(model,test_loader,loss_criterion,device)
             end_eval_time = time.time()
 
         # stats
