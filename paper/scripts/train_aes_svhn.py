@@ -1,7 +1,6 @@
 
 
 import sys
-sys.path.append('..')
 import os
 from typing import Any, Dict
 
@@ -11,6 +10,8 @@ import torch.nn as nn
 from torch import optim
 import absl.flags
 import absl.app
+
+sys.path.append('..')
 
 from architectures.autoencoder import AutoEncoder
 import utils.utils as utils

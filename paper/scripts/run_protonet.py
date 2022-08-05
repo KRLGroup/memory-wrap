@@ -1,5 +1,4 @@
 # reference https://github.com/oscarknagg/few-shot/blob/master/few_shot/proto.py
-from ctypes import util
 import sys
 from typing import List, Tuple
 import os
