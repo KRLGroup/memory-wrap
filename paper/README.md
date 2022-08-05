@@ -1,7 +1,6 @@
 # Memory Wrap: a Data-Efficient and Interpretable Extension to Image Classification Models  
 
-This repository is the official implementation of the paper: A self-interpretable module for deep image classification on small data.
-
+This repository is the official implementation of the paper: "A self-interpretable module for deep image classification on small data. *Biagio La Rosa, Roberto Capobianco and Daniele Nardi.*  Appl Intell (2022). https://doi.org/10.1007/s10489-022-03886-6"
 ## Requirements
 
 To run the code you need to install the following packages:
