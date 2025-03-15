@@ -163,7 +163,7 @@ def run_experiment(config:dict,modality:str):
     if FLAGS.continue_train:
         # load model
         print("Restarting training process\n")
-        info = pickle.load( open(  path_saving_model+"conf.p", "rb" ) )
+        info = pickle.load( open(path_saving_model+"conf.p", "rb" ) )
         initial_run = info['run_num']
         run_acc = info['accuracies']
     for run in range(initial_run,config['runs']):
@@ -214,7 +214,7 @@ def run_experiment(config:dict,modality:str):
             'mem_examples':  config[config['dataset_name']]['mem_examples'],
             'model_name': config['model'],
             'num_classes': num_classes, 'modality':modality, 'dataset_name':config['dataset_name']} , save_path)
-            info = {'run_num':run+1,}
+            info = {'run_num':run+1,'accuracies':run_acc}
             pickle.dump( info, open( path_saving_model+"conf.p", "wb" ) )
 
         # log
