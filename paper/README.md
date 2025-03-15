@@ -6,8 +6,8 @@ This repository is the official implementation of the paper: "A self-interpretab
 To run the code you need to install the following packages:
 
 - python 3.8.5
-- pytorch 1.7 (https://pytorch.org/)
-- torchvision 0.8.1 (included in PyTorch)
+- pytorch 1.9.1 (https://pytorch.org/)
+- torchvision 0.10.1 (included in PyTorch)
 - absl-py 0.10 (https://pypi.org/project/absl-py/)
 - captum 0.3.0 (https://captum.ai/)
 - entmax 1.0 (https://github.com/deep-spin/entmax)
