@@ -18,7 +18,43 @@ To run the code you need to install the following packages:
 - einops 0.4.1 (https://pypi.org/project/einops/)
 
 
-
+### Install Requirements - Option 1 (Docker):
+- <a href="https://www.docker.com/get-started/">Install Docker</a>
+- Pull the Nvidia Docker 21.06 using the following command
+```
+ docker pull nvcr.io/nvidia/pytorch:21.06-py3 
+```
+- Run the docker image
+If you have an NVIDIA GPU you can adapt the following command:
+```
+docker run --gpus all -it --rm -v <DIR_REPO>:/workspace/ --net=host --ulimit memlock=-1 --ulimit stack=67108864 --ipc=host nvcr.io/nvidia/pytorch:21.06-py3
+```
+If you do not have any GPU, you can use this command:
+```
+docker run -it --rm -v <DIR_REPO>:/workspace/ --net=host --ulimit memlock=-1 --ulimit stack=67108864 --ipc=host nvcr.io/nvidia/pytorch:21.06-py3
+```
+- Install memorywrap and dependencies within the docker image
+```
+pip install memorywrap captum==0.3.0 absl-py==0.10 scipy==1.5.2 scikit-learn pyyaml pillow==9.0.0
+```
+### Install Requirements - Option 2 (Conda):
+- <a href="https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html">Install Conda</a>
+- Create a new virtual environment
+```
+conda create -n memorywrap python=3.8
+```
+- Activate the environment:
+```
+conda activate memorywrap
+```
+- Install the dependencies
+```
+conda install pytorch==1.9.1 torchvision=0.10.1 cudatoolkit=11.3 captum==0.3.0 absl-py==0.10 scipy==1.5.2 scikit-learn pyyaml -c pytorch
+```
+- Install memorywrap within the docker image 
+```
+pip install memorywrap
+```
 ## Repository Structure
 This is the description of repository structure. Note that folders inside "images" dir and "models" dir will be created at running time only when you run the respective scripts to generate images or models.
 ```  
