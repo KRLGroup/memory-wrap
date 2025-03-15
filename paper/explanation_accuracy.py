@@ -83,7 +83,7 @@ image
 
     return explanation_accuracy, counter_accuracy, example_accuracy
 
-def run_evaluation(path:str,dataset_dir:str):
+def run_evaluation(path:str,dataset_dir:str, num_runs:int=5):
     """ Function to print the explanation accuracy of a set of models inside a dir.  It prints the mean and standard deviation of explanation accuracy of the top sample in memory on different settings (see paper).
 
     Args:
@@ -92,8 +92,6 @@ def run_evaluation(path:str,dataset_dir:str):
     """
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Device:{}".format(device))
-    
-    # load data   
 
     # load model
     expl_acc = []
@@ -122,7 +120,8 @@ def run_evaluation(path:str,dataset_dir:str):
         cum_acc =  []
         cum_acc_counter = []
         cum_acc_ex = []
-        for _ in range(5):
+        for index_run in range(num_runs):
+            print(f"Model:{name_model}\tRun:{index_run+1}/{num_runs}")
             exp_max_acc, counter_acc,example_acc = get_explanation_accuracy(model,test_loader,mem_loader,device)
             cum_acc.append(exp_max_acc)
             cum_acc_counter.append(counter_acc)

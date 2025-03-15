@@ -112,7 +112,7 @@ def run(path:str,dataset_dir:str):
         fig.tight_layout()
         fig.savefig(dir_save+str(batch_idx*batch_size_test+ind)+".png")
         plt.close()
-        print('{}/{}'.format(batch_idx,len(test_loader)),end='\r')
+        print('Generated {}/{} images'.format(batch_idx,len(test_loader)),end='\r')
 
 
 def main(argv):
