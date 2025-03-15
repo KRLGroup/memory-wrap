@@ -155,7 +155,7 @@ def run(path:str,dataset_dir:str):
     batch_size_test=1
     
     # load model
-    checkpoint = torch.load(path)
+    checkpoint = torch.load(path, map_location=device)
     modality = checkpoint['modality']
     if modality not in ['memory','encoder_memory']:
         raise ValueError(f'Model\'s modality (model type) must be one of [\'memory\',\'encoder_memory\'], not {modality}.')

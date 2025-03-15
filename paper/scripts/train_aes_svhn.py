@@ -31,6 +31,7 @@ NUM_EPOCHS_AE = 4
 
 def run_experiment(path_models, saving_path=None, dir_dataset=None):
     # load name of models in the path_models dir
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     list_models = [name_file for name_file in os.listdir(path_models) if name_file.endswith('.pt')]
     for name_model in list_models:
         # set seed for reproducibility using the index of the model as seed
@@ -40,12 +41,12 @@ def run_experiment(path_models, saving_path=None, dir_dataset=None):
         ####################################################
         ######### load classification model ################
         ###################################################
-        checkpoint = torch.load(path_models+name_model)
+        checkpoint = torch.load(path_models+name_model, map_location=device)
         model_type = checkpoint['modality']
         model = utils.get_model(checkpoint['model_name'], checkpoint['num_classes'],
                                 model_type=model_type)
         model.load_state_dict(checkpoint['model_state_dict'])
-        model = model.cuda()
+        model = model.to(device)
         model.eval()
 
         ####################################################
@@ -76,7 +77,7 @@ def run_experiment(path_models, saving_path=None, dir_dataset=None):
             # Train AE
             print(f"Training autoencoder for class {id_class}")
             autoencoder = AutoEncoder(num_channels=3)
-            autoencoder = autoencoder.cuda()
+            autoencoder = autoencoder.to(device)
             loss_criterion_ae = nn.MSELoss()
             optimizer = optim.Adam(autoencoder.parameters())
 
@@ -86,7 +87,7 @@ def run_experiment(path_models, saving_path=None, dir_dataset=None):
                 for _,data in enumerate(dataloader):
                     optimizer.zero_grad()
                     img, _ = data
-                    img = img.cuda()
+                    img = img.to(device)
                     # ===================forward=====================
                     output = autoencoder(img)
                     loss = loss_criterion_ae(output, img)
@@ -104,7 +105,7 @@ def run_experiment(path_models, saving_path=None, dir_dataset=None):
             with torch.no_grad():
                 for _, data in enumerate(testloader):
                     img, _ = data
-                    img = img.cuda()
+                    img = img.to(device)
                     output = autoencoder(img)
                     loss = loss_criterion_ae(output, img)
                     avg_loss_ae_test.append(loss.item())
@@ -138,7 +139,7 @@ def run_experiment(path_models, saving_path=None, dir_dataset=None):
             for data in dataloader:
                 optimizer.zero_grad()
                 img, _ = data
-                img = img.cuda()
+                img = img.to(device)
                 # ===================forward=====================
                 output = autoencoder(img)
                 loss = loss_criterion_ae(output, img)
@@ -157,7 +158,7 @@ def run_experiment(path_models, saving_path=None, dir_dataset=None):
         with torch.no_grad():
             for _, data in enumerate(testloader):
                 img, _ = data
-                img = img.cuda()
+                img = img.to(device)
                 output = autoencoder(img)
                 loss = loss_criterion_ae(output, img)
                 avg_loss_ae_test.append(loss.item())

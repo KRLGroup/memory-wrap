@@ -169,7 +169,6 @@ def run_experiment(config:dict,modality:str):
     for run in range(initial_run,config['runs']):
         run_time = time.time()
         utils.set_seed(run)
-        torch.cuda.init()
         model = utils.get_model(config['model'],num_classes,model_type=modality)
         model = model.to(device)
         # training parameters

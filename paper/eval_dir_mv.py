@@ -101,7 +101,7 @@ def run_experiment(path:str,dataset_dir:str):
         run,_ = name_model.split('.')
         run = int(run)-1
         utils.set_seed(run)
-        checkpoint = torch.load(path+name_model)
+        checkpoint = torch.load(path+name_model,  map_location=device)
         #   load model
         modality = checkpoint['modality']
 

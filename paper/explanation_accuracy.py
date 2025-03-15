@@ -103,7 +103,7 @@ def run_evaluation(path:str,dataset_dir:str):
     for indx, name_model in enumerate(list_models):
 
         # load model
-        checkpoint = torch.load(path+name_model)
+        checkpoint = torch.load(path+name_model, map_location=device)
         model_name = checkpoint['model_name']
         modality = checkpoint['modality']
         dataset_name = checkpoint['dataset_name']

@@ -32,7 +32,7 @@ def run(path:str,dataset_dir:str):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Device:{}".format(device))    
     # load model
-    checkpoint = torch.load(path)
+    checkpoint = torch.load(path, map_location=device)
     modality = checkpoint['modality']
     if modality not in ['memory','encoder_memory']:
         raise ValueError(f'Model\'s modality (model type) must be one of [\'memory\',\'encoder_memory\'], not {modality}.')
