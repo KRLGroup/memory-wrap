@@ -15,6 +15,7 @@ import captum.attr # type: ignore
 # user flags
 absl.flags.DEFINE_string("path_model", None, "Path of the trained model")
 absl.flags.DEFINE_string("dir_dataset", '../datasets/', "dir path where datasets are stored")
+absl.flags.DEFINE_integer("batch_size_test", 1, "Number of samples for each image")
 absl.flags.mark_flag_as_required("path_model")
 
 FLAGS = absl.flags.FLAGS
@@ -152,7 +153,7 @@ def run(path:str,dataset_dir:str):
     """
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Device:{}".format(device))
-    batch_size_test=1
+    batch_size_test=FLAGS.batch_size_test
     
     # load model
     checkpoint = torch.load(path, map_location=device)
