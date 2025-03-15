@@ -218,7 +218,7 @@ Where *Explanation accuracy*  is the metric shown in Table 5. *counterfactual me
 You can find a pre-trained model used to generate
  part of the images of the paper in the following path:
 ```
-models/pretrained.pt
+models/2000.pt
 ```
 To get models for the other configurations, please run the 
 training script described above.
