@@ -71,6 +71,7 @@ def run(path:str,dataset_dir:str):
 
 
     for batch_idx, (images, _) in enumerate(test_loader):
+        print("Batch:{}/{}".format(batch_idx, len(test_loader)), end='\r')
         try:
             memory, _ = next(memory_iter)
         except StopIteration:
